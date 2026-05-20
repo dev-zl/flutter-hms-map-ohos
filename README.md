@@ -32,6 +32,9 @@ This plugin enables communication between Huawei Map Kit SDK and Flutter platfor
 
 [Learn More](https://developer.huawei.com/consumer/en/doc/HMS-Plugin-Guides/introduction-0000001050296908-V1?ha_source=hms1)
 
+
+<img src="./screenshot_20260520_162401.jpg">
+
 ## Installation
 
 Please see [pub.dev](https://pub.dev/packages/huawei_map/install) and [AppGallery Connect Configuration](https://developer.huawei.com/consumer/en/doc/HMS-Plugin-Guides/config-agc-0000001050296920-V1?ha_source=hms1).
