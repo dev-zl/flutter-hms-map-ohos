@@ -1,0 +1,49 @@
+{
+  "app": {
+
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.5(17)",
+        "runtimeOS": "HarmonyOS"
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release"
+      }
+    ],
+    "capabilities": [
+      {
+        "bundleName": "com.huawei.hms.flutter.example",
+        "config": [
+          {
+            "capability": "com.huawei.service.mapkit",
+            "name": "Map Kit"
+          }
+        ]
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "example"
+    },
+    {
+      "name": "permission_network_state_label",
+      "value": "Network state permission"
+    },
+    {
+      "name": "permission_network_state_desc",
+      "value": "Used to detect network state for map loading"
+    }
+  ]
+}

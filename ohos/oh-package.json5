@@ -1,0 +1,15 @@
+{
+  "modelVersion": "6.1.0",
+  "name": "huawei_map",
+  "version": "1.0.0",
+  "description": "Huawei HMS Map Flutter Plugin for HarmonyOS",
+  "main": "index.ets",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ohos/flutter_ohos": "file:./har/flutter.har"
+  },
+  "devDependencies": {
+    "@ohos/hypium": "1.0.6",
+  },
+}

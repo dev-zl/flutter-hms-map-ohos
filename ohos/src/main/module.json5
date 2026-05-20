@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "huawei_map",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet"
+    ]
+  }
+}

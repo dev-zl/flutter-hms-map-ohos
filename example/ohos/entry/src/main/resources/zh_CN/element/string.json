@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "模块描述"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "example"
+    },
+    {
+      "name": "permission_network_state_label",
+      "value": "网络状态权限"
+    },
+    {
+      "name": "permission_network_state_desc",
+      "value": "用于地图加载时检测网络状态"
+    }
+  ]
+}
