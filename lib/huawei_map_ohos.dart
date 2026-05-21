@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-library huawei_map;
+library huawei_map_ohos;
 
 import 'dart:async';
 import 'dart:convert';

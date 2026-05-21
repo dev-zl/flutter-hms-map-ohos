@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 Map<CircleId, Circle> circleToMap(Iterable<Circle> circles) {
   return Map<CircleId, Circle>.fromEntries(

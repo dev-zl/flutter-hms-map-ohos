@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// Provides various constructors for creating [CameraUpdate] objects that modify the camera of a map.
 class CameraUpdate {

@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// A tile overlay is a set of images to be displayed on a map.
 ///

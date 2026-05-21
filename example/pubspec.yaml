@@ -7,7 +7,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  huawei_map:
+  huawei_map_ohos:
     path: ../
 
 dev_dependencies:

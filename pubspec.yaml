@@ -1,7 +1,7 @@
-name: huawei_map
+name: huawei_map_ohos
 description: Huawei Map Kit plugin for Flutter. Huawei Map Kit, provides standard maps as well as UI elements for you to customize maps that better meet service scenarios.
-homepage: https://www.huawei.com
-repository: https://github.com/HMS-Core/hms-flutter-plugin/tree/master/flutter-hms-map
+homepage: http://www.zhenli.cyou
+repository: https://github.com/dev-zl/flutter-hms-map-ohos
 
 version: 6.11.2+303
 

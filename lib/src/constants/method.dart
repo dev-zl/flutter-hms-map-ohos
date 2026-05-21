@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 abstract class _Method {
   static const String CameraMoveStart = '[Camera]onMoveStarted';

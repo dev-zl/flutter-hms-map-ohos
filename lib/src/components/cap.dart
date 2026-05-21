@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// Defines a cap that is applied at the start or end vertex of a [Polyline].
 @immutable

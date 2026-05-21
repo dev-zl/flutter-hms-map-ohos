@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 abstract class _HuaweiMapMethodChannel {
   static final Map<int, MethodChannel> _channels = <int, MethodChannel>{};
@@ -25,10 +25,6 @@ abstract class _HuaweiMapMethodChannel {
     final String prefix = _currentPlatform == PlatformType.harmonyos
         ? _harmonyMapChannel
         : _mapChannel;
-    debugPrint(
-      'HuaweiMap init: channelPrefix=$prefix currentPlatform=$_currentPlatform '
-      'Platform.isOhos=${Platform.isOhos}',
-    );
     return prefix;
   }
 
@@ -668,11 +664,8 @@ abstract class _HuaweiMapMethodChannel {
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
     PlatformViewCreatedCallback onPlatformViewCreated,
   ) {
-    if (Platform.isOhos) {
-      debugPrint(
-        'HuaweiMap init: building OHOS PlatformViewLink viewType=$_mapChannel '
-        'creationKeys=${creationParams.keys.toList()}',
-      );
+    if (PlatformDetector.isHarmonyOS) {
+
       return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           debugPrint(
@@ -681,46 +674,47 @@ abstract class _HuaweiMapMethodChannel {
             'hasBoundedWidth=${constraints.hasBoundedWidth} '
             'hasBoundedHeight=${constraints.hasBoundedHeight}',
           );
-          return PlatformViewLink(
-            viewType: _mapChannel,
-            surfaceFactory: (
-              BuildContext context,
-              PlatformViewController controller,
-            ) {
-              return OhosViewSurface(
-                controller: controller as OhosViewController,
-                gestureRecognizers: gestureRecognizers ??
-                    const <Factory<OneSequenceGestureRecognizer>>{},
-                hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-              );
-            },
-            onCreatePlatformView: (PlatformViewCreationParams params) {
-              debugPrint(
-                'HuaweiMap init: initSurfaceOhosView id=${params.id} '
-                'viewType=$_mapChannel',
-              );
-              final OhosViewController controller =
-                  PlatformViewsService.initOhosView(
-                id: params.id,
-                viewType: _mapChannel,
-                layoutDirection: TextDirection.ltr,
-                creationParams: creationParams,
-                creationParamsCodec: const StandardMessageCodec(),
-                onFocus: () => params.onFocusChanged(true),
-              );
-              controller.addOnPlatformViewCreatedListener(
-                params.onPlatformViewCreated,
-              );
-              controller.addOnPlatformViewCreatedListener(
-                onPlatformViewCreated,
-              );
-              debugPrint('HuaweiMap init: controller.create() id=${params.id}');
-              controller.create();
-              debugPrint('HuaweiMap init: controller.create() returned');
-
-              return controller;
-            },
-          );
+          // return PlatformViewLink(
+          //   viewType: _mapChannel,
+          //   surfaceFactory: (
+          //     BuildContext context,
+          //     PlatformViewController controller,
+          //   ) {
+          //     return OhosViewSurface(
+          //       controller: controller as OhosViewController,
+          //       gestureRecognizers: gestureRecognizers ??
+          //           const <Factory<OneSequenceGestureRecognizer>>{},
+          //       hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+          //     );
+          //   },
+          //   onCreatePlatformView: (PlatformViewCreationParams params) {
+          //     debugPrint(
+          //       'HuaweiMap init: initSurfaceOhosView id=${params.id} '
+          //       'viewType=$_mapChannel',
+          //     );
+          //     final OhosViewController controller =
+          //         PlatformViewsService.initOhosView(
+          //       id: params.id,
+          //       viewType: _mapChannel,
+          //       layoutDirection: TextDirection.ltr,
+          //       creationParams: creationParams,
+          //       creationParamsCodec: const StandardMessageCodec(),
+          //       onFocus: () => params.onFocusChanged(true),
+          //     );
+          //     controller.addOnPlatformViewCreatedListener(
+          //       params.onPlatformViewCreated,
+          //     );
+          //     controller.addOnPlatformViewCreatedListener(
+          //       onPlatformViewCreated,
+          //     );
+          //     debugPrint('HuaweiMap init: controller.create() id=${params.id}');
+          //     controller.create();
+          //     debugPrint('HuaweiMap init: controller.create() returned');
+          //
+          //     return controller;
+          //   },
+          // );
+          return SizedBox();
         },
       );
     } else {

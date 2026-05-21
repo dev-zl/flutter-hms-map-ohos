@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 Map<MarkerId, Marker> markerToMap(Iterable<Marker> markers) {
   return Map<MarkerId, Marker>.fromEntries(

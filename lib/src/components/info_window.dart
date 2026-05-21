@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// Defines an information window that shows up when a [Marker] is tapped.
 class InfoWindow {

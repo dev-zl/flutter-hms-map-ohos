@@ -15,7 +15,7 @@
 */
 
 import 'package:flutter/material.dart';
-import 'package:huawei_map/huawei_map.dart';
+import 'package:huawei_map_ohos/huawei_map_ohos.dart';
 
 import 'package:huawei_map_example/components/circle_demo.dart.dart';
 import 'package:huawei_map_example/components/ground_overlay_demo.dart';

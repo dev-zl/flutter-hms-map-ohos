@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../../huawei_map.dart';
+part of '../../../huawei_map_ohos.dart';
 
 abstract class HmsAnimation {
   // Fill Mode Constants
@@ -113,7 +113,7 @@ abstract class HmsAnimation {
   }
 
   void setMethodChannel(String id) {
-    final String channelPrefix = Platform.isOhos
+    final String channelPrefix = PlatformDetector.isHarmonyOS
         ? _harmonyAnimationChannel
         : _animationChannel;
     _methodChannel = MethodChannel('${channelPrefix}_$animationId');

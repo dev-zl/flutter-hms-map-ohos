@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 class MapEventPoi<T> extends MapEvent<T> {
   final PointOfInterest pointOfInterest;

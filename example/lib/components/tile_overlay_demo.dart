@@ -16,7 +16,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:huawei_map/huawei_map.dart';
+import 'package:huawei_map_ohos/huawei_map_ohos.dart';
 
 import 'package:huawei_map_example/custom_widgets/custom_action_bar.dart';
 import 'package:huawei_map_example/custom_widgets/custom_app_bar.dart';

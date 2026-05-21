@@ -17,7 +17,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:huawei_map/huawei_map.dart';
+import 'package:huawei_map_ohos/huawei_map_ohos.dart';
 
 /// HarmonyOS 地图示例
 /// HarmonyOS Map Example

@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 Map<PolygonId, Polygon> polygonToMap(Iterable<Polygon> polygons) {
   return Map<PolygonId, Polygon>.fromEntries(

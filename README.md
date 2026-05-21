@@ -6,8 +6,8 @@
 > **We've supported native HarmonyOS (鸿蒙) maps!** For detailed API support information, please refer to [ohos_unsupported_features.md](ohos_unsupported_features.md).
 >
 > **我们已经支持原生鸿蒙地图！** 详细的 API 支持情况，请查阅 [ohos_unsupported_features.md](ohos_unsupported_features.md)。
-
-
+> ** 鸿蒙系统 使用 自行 放开注释代码:lib/src/channel/huawei_map_method_channel.dart:buildView
+> ** For HarmonyOS, use the self-released comment code :lib/src/channel/huawei_map_method_channel.dart:buildView
 
 <p align="center">
   <a href="https://pub.dev/packages/huawei_map"><img src="https://img.shields.io/pub/v/huawei_map?style=for-the-badge" alt="pub.dev version"></a>

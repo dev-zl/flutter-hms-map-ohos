@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// Platform type detector using Dart's Platform.isOhos
 enum PlatformType {
@@ -23,21 +23,21 @@ enum PlatformType {
 }
 
 /// Current platform detector
-PlatformType _currentPlatform = Platform.isOhos ? PlatformType.harmonyos : PlatformType.android;
+PlatformType _currentPlatform = PlatformDetector.isHarmonyOS ? PlatformType.harmonyos : PlatformType.android;
 
 /// Platform detector utility class
 class PlatformDetector {
   /// Auto-configure platform based on Platform.isOhos
   static void autoConfigurePlatform() {
-    _currentPlatform = Platform.isOhos ? PlatformType.harmonyos : PlatformType.android;
-    debugPrint('Platform auto-configured: ${Platform.isOhos ? "HarmonyOS" : "Android"}');
+    _currentPlatform = isHarmonyOS? PlatformType.harmonyos : PlatformType.android;
   }
 
   /// Check if current platform is HarmonyOS
-  static bool get isHarmonyOS => Platform.isOhos;
+  static bool get isHarmonyOS => Platform.environment.values
+      .any((v) => v.toString().toLowerCase().contains('harmony'));
 
   /// Check if current platform is Android
-  static bool get isAndroid => !Platform.isOhos;
+  static bool get isAndroid => Platform.isAndroid;
 
   /// Get current platform type
   static PlatformType get currentPlatform => _currentPlatform;

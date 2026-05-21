@@ -14,13 +14,13 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// To use certain functions before obtaining a map, use this class to initialize the Map SDK.
 abstract class HuaweiMapInitializer {
   static MethodChannel get _channel {
     return MethodChannel(
-      Platform.isOhos
+      PlatformDetector.isHarmonyOS
           ? _harmonyMapUtilChannel
           : _mapUtilChannel,
     );

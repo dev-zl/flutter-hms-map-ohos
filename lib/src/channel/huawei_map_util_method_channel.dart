@@ -14,13 +14,13 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// Entry class for Map Kit utilities.
 abstract class HuaweiMapUtils {
   static MethodChannel get _channel {
     return MethodChannel(
-      Platform.isOhos
+      PlatformDetector.isHarmonyOS
           ? _harmonyMapUtilChannel
           : _mapUtilChannel,
     );

@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-part of '../../huawei_map.dart';
+part of '../../huawei_map_ohos.dart';
 
 /// Encapsulates attributes for setting the minimum and maximum zoom levels.
 class MinMaxZoomPreference {
