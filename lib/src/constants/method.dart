@@ -90,6 +90,8 @@ abstract class _Method {
 
   static const String MapGetZoomLevel = '[Map]getZoomLevel';
 
+  static const String MapGetCameraPosition = '[Map]getCameraPosition';
+
   static const String MapSetStyle = '[Map]setStyle';
 
   static const String InitializeMap = '[MapUtil]initializeMap';

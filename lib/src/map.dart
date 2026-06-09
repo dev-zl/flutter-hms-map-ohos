@@ -276,6 +276,11 @@ class HuaweiMapController {
     return _HuaweiMapMethodChannel.getZoomLevel(mapId: mapId);
   }
 
+  /// Obtains the current camera position of a map.
+  Future<CameraPosition?> getCameraPosition() {
+    return _HuaweiMapMethodChannel.getCameraPosition(mapId: mapId);
+  }
+
   /// Takes a snapshot of a map.
   Future<Uint8List?> takeSnapshot() {
     return _HuaweiMapMethodChannel.takeSnapshot(mapId: mapId);

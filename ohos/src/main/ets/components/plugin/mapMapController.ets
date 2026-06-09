@@ -233,6 +233,16 @@ export class MapController implements MethodCallHandler {
         break;
       }
 
+      case Method.MAP_GET_CAMERA_POSITION: {
+        try {
+          const pos = this.mapController.getCameraPosition();
+          result.success(ToJson.cameraPosition(pos));
+        } catch (e) {
+          result.error('ERROR', `getCameraPosition failed: ${e}`, null);
+        }
+        break;
+      }
+
       case Method.MAP_SET_STYLE: {
         // HarmonyOS MapKit's `setStyle(string)` is not available on
         // MapComponentController. Acknowledge so Dart's await resolves.

@@ -93,4 +93,5 @@ export class Method {
   static readonly MAP_GET_SCALEPERPIXEL: string = '[Map]getScalePerPixel';
   static readonly MAP_SET_STYLE: string = '[Map]setStyle';
   static readonly MAP_GET_ZOOM_LEVEL: string = '[Map]getZoomLevel';
+  static readonly MAP_GET_CAMERA_POSITION: string = '[Map]getCameraPosition';
 }

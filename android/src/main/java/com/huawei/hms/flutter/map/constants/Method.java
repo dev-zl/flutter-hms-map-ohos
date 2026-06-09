@@ -65,6 +65,7 @@ public interface Method {
     String MAP_IS_TRAFFIC_ENABLED = "[Map]isTrafficEnabled";
     String MAP_IS_BUILDINGS_ENABLED = "[Map]isBuildingsEnabled";
     String MAP_GET_ZOOM_LEVEL = "[Map]getZoomLevel";
+    String MAP_GET_CAMERA_POSITION = "[Map]getCameraPosition";
     String MAP_SET_STYLE = "[Map]setStyle";
     String GROUND_OVERLAY_CLICK = "[GroundOverlay]click";
     String GROUND_OVERLAYS_UPDATE = "[GroundOverlays]update";

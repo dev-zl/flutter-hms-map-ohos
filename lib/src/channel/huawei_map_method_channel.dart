@@ -653,6 +653,19 @@ abstract class _HuaweiMapMethodChannel {
     );
   }
 
+  static Future<CameraPosition?> getCameraPosition({required int mapId}) async {
+    final Map<String, dynamic>? cameraPosition =
+        await setChannel(mapId).invokeMapMethod<String, dynamic>(
+      _Method.MapGetCameraPosition,
+    );
+
+    if (cameraPosition == null) {
+      return null;
+    }
+
+    return CameraPosition.fromMap(cameraPosition);
+  }
+
   static Future<Uint8List?> takeSnapshot({required int mapId}) {
     return setChannel(mapId).invokeMethod<Uint8List>(
       _Method.MapTakeSnapshot,

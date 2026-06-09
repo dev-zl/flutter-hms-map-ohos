@@ -333,6 +333,17 @@ final class MapController
                 logger.sendSingleEvent(Method.DEACTIVATE_LOC_SOURCE);
                 break;
             }
+            case Method.MAP_GET_CAMERA_POSITION: {
+                logger.startMethodExecutionTimer(Method.MAP_GET_CAMERA_POSITION);
+                if (huaweiMap != null) {
+                    result.success(ToJson.cameraPosition(huaweiMap.getCameraPosition()));
+                    logger.sendSingleEvent(Method.MAP_GET_CAMERA_POSITION);
+                } else {
+                    result.error(Param.ERROR, Method.MAP_GET_CAMERA_POSITION, null);
+                    logger.sendSingleEvent(Method.MAP_GET_CAMERA_POSITION, "Couldn't get camera position.");
+                }
+                break;
+            }
             case Method.MAP_GET_SCALEPERPIXEL: {
                 logger.startMethodExecutionTimer(Method.MAP_GET_SCALEPERPIXEL);
                 if (huaweiMap != null) {
