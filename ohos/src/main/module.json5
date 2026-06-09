@@ -1,6 +1,6 @@
 {
   "module": {
-    "name": "huawei_map",
+    "name": "huawei_map_ohos",
     "type": "har",
     "deviceTypes": [
       "default",
