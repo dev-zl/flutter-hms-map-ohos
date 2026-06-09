@@ -33,8 +33,7 @@ class PlatformDetector {
   }
 
   /// Check if current platform is HarmonyOS
-  static bool get isHarmonyOS => Platform.environment.values
-      .any((v) => v.toString().toLowerCase().contains('harmony'));
+  static bool get isHarmonyOS =>  Platform.operatingSystem=='ohos';
 
   /// Check if current platform is Android
   static bool get isAndroid => Platform.isAndroid;
