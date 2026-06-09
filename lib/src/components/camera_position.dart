@@ -50,10 +50,10 @@ class CameraPosition {
   /// Creates a [CameraPosition] object from a map.
   static CameraPosition fromMap(dynamic json) {
     return CameraPosition(
-      bearing: json[_Param.bearing],
+      bearing: json[_Param.bearing].toDouble(),
       target: LatLng.fromJson(json[_Param.target]),
-      tilt: json[_Param.tilt],
-      zoom: json[_Param.zoom],
+      tilt: json[_Param.tilt].toDouble(),
+      zoom: json[_Param.zoom].toDouble(),
     );
   }
 
