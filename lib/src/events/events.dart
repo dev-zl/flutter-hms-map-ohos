@@ -30,6 +30,27 @@ class MapLongPressEvent extends MapEventCoord<void> {
   ) : super(mapId, position, null);
 }
 
+class MapDrawStartEvent extends MapEventCoord<void> {
+  const MapDrawStartEvent(
+    int mapId,
+    LatLng position,
+  ) : super(mapId, position, null);
+}
+
+class MapDrawUpdateEvent extends MapEventCoord<void> {
+  const MapDrawUpdateEvent(
+    int mapId,
+    LatLng position,
+  ) : super(mapId, position, null);
+}
+
+class MapDrawEndEvent extends MapEvent<List<LatLng>> {
+  const MapDrawEndEvent(
+    int mapId,
+    List<LatLng> points,
+  ) : super(mapId, points);
+}
+
 class MarkerClickEvent extends MapEvent<MarkerId> {
   const MarkerClickEvent(
     int mapId,

@@ -756,6 +756,11 @@ public class Convert {
             call.setMyLocationStyle(Convert.toMyLocationStyle(myLocationStyle));
         }
 
+        final Object drawingEnabled = args.get(Param.DRAWING_ENABLED);
+        if (drawingEnabled != null) {
+            call.setDrawingEnabled(Convert.toBoolean(drawingEnabled));
+        }
+
         processHuaweiMapOptionsGestures(args, call);
     }
 

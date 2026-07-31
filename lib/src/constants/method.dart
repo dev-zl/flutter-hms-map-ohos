@@ -49,6 +49,12 @@ abstract class _Method {
 
   static const String MapLongClick = '[Map]onLongPress';
 
+  static const String MapDrawStart = '[Map]onDrawStart';
+
+  static const String MapDrawUpdate = '[Map]onDrawUpdate';
+
+  static const String MapDrawEnd = '[Map]onDrawEnd';
+
   static const String MapPoiClick = '[Map]onPoiClick';
 
   static const String MapOnMyLocationClick = '[Map]onMyLocationClick';

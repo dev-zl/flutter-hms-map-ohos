@@ -219,6 +219,13 @@ public interface MapMethods {
     void setAllGesturesEnabled(Boolean allGesturesEnabled);
 
     /**
+     * Sets whether single-finger drawing is enabled.
+     *
+     * @param drawingEnabled whether drawing is enabled
+     */
+    void setDrawingEnabled(boolean drawingEnabled);
+
+    /**
      * Sets scroll gestures during rotate or zoom.
      *
      * @param scrollGesturesEnabledDuringRotateOrZoom the scroll gestures enabled during rotate or zoom

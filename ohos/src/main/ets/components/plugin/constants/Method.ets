@@ -36,6 +36,9 @@ export class Method {
 
   static readonly MAP_CLICK: string = '[Map]click';
   static readonly MAP_ON_LONG_PRESS: string = '[Map]onLongPress';
+  static readonly MAP_ON_DRAW_START: string = '[Map]onDrawStart';
+  static readonly MAP_ON_DRAW_UPDATE: string = '[Map]onDrawUpdate';
+  static readonly MAP_ON_DRAW_END: string = '[Map]onDrawEnd';
   static readonly MAP_WAIT_FOR_MAP: string = '[Map]waitForMap';
   static readonly MAP_ON_POI_CLICK: string = '[Map]onPoiClick';
   static readonly MAP_ON_MY_LOCATION_CLICK: string = '[Map]onMyLocationClick';

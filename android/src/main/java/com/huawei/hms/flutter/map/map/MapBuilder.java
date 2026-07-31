@@ -70,6 +70,8 @@ class MapBuilder implements MapMethods {
 
     private Boolean allGesturesEnabled;
 
+    private boolean drawingEnabled = false;
+
     private boolean scrollGesturesEnabledDuringRotateOrZoom = true;
 
     private boolean gestureScaleByMapCenter = false;
@@ -103,6 +105,7 @@ class MapBuilder implements MapMethods {
             lifecycle, activityPluginBinding, options);
         controller.init();
         controller.setAllGesturesEnabled(allGesturesEnabled);
+        controller.setDrawingEnabled(drawingEnabled);
         controller.setScrollGesturesEnabledDuringRotateOrZoom(scrollGesturesEnabledDuringRotateOrZoom);
         controller.setGestureScaleByMapCenter(gestureScaleByMapCenter);
         controller.setMyLocationEnabled(myLocationEnabled);
@@ -223,6 +226,11 @@ class MapBuilder implements MapMethods {
     @Override
     public void setAllGesturesEnabled(Boolean allGesturesEnabled) {
         this.allGesturesEnabled = allGesturesEnabled;
+    }
+
+    @Override
+    public void setDrawingEnabled(boolean drawingEnabled) {
+        this.drawingEnabled = drawingEnabled;
     }
 
     @Override

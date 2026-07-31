@@ -138,7 +138,7 @@ export class MapFactory extends PlatformViewFactory {
     }
     hilog.info(0x0000, TAG, `converted mapOptions id=${viewId}: ${JSON.stringify(mapOptions)}`);
 
-    const hmsMap = new HmsMap(mapOptions);
+    const hmsMap = new HmsMap(mapOptions, options[Param.DRAWING_ENABLED] === true);
     hilog.info(0x0000, TAG, `HmsMap instance created id=${viewId}`);
     const channelName = `${Channel.CHANNEL}_${viewId}`;
     const channel = new MethodChannel(this.messenger, channelName, StandardMethodCodec.INSTANCE);

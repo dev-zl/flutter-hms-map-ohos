@@ -46,6 +46,7 @@ public interface Param {
     String ZOOM_OUT = "zoomOut";
     String ZOOM_TO = "zoomTo";
     String POSITION = "position";
+    String DRAWING_ENABLED = "drawingEnabled";
     String REASON = "reason";
     String MARKER_ID = "markerId";
     String COMPASS_ENABLED = "compassEnabled";

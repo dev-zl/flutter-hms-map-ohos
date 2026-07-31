@@ -34,6 +34,9 @@ public interface Method {
     String CIRCLE_CLICK = "[Circle]click";
     String MAP_CLICK = "[Map]click";
     String MAP_ON_LONG_PRESS = "[Map]onLongPress";
+    String MAP_ON_DRAW_START = "[Map]onDrawStart";
+    String MAP_ON_DRAW_UPDATE = "[Map]onDrawUpdate";
+    String MAP_ON_DRAW_END = "[Map]onDrawEnd";
     String MAP_WAIT_FOR_MAP = "[Map]waitForMap";
     String MAP_ON_POI_CLICK = "[Map]onPoiClick";
     String MAP_ON_MY_LOCATION_CLICK = "[Map]onMyLocationClick";

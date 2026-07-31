@@ -767,6 +767,9 @@ export class Convert {
     if (options[Param.ALL_GESTURES_ENABLED] !== undefined) {
       ctrl.setAllGesturesEnabled(options[Param.ALL_GESTURES_ENABLED] as boolean);
     }
+    if (options[Param.DRAWING_ENABLED] !== undefined) {
+      ctrl.setDrawingEnabled(options[Param.DRAWING_ENABLED] as boolean);
+    }
     if (options[Param.ZOOM_CONTROLS_ENABLED] !== undefined) {
       ctrl.setZoomControlsEnabled(options[Param.ZOOM_CONTROLS_ENABLED] as boolean);
     }
@@ -867,6 +870,7 @@ interface MapControllerRef {
   setTiltGesturesEnabled(v: boolean): void;
   setZoomGesturesEnabled(v: boolean): void;
   setAllGesturesEnabled(v: boolean): void;
+  setDrawingEnabled(v: boolean): void;
   setZoomControlsEnabled(v: boolean): void;
   setTrackCameraPosition(v: boolean): void;
   setMyLocationEnabled(v: boolean): void;

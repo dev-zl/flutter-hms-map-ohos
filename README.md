@@ -87,6 +87,34 @@ await controller.addMassPoints([
 or radii are automatically grouped into native `MassPointOverlay` instances.
 This API is not available in the Android Huawei Map SDK.
 
+## Draw on the map
+
+Android and HarmonyOS can convert every drawing touch point to a geographic
+coordinate with the native map projection:
+
+```dart
+HuaweiMap(
+  initialCameraPosition: const CameraPosition(
+    target: LatLng(39.9042, 116.4074),
+    zoom: 14,
+  ),
+  drawingEnabled: true,
+  onDrawStart: (LatLng point) {
+    // Start a new path.
+  },
+  onDrawUpdate: (LatLng point) {
+    // Update a Polyline or a custom drawing layer.
+  },
+  onDrawEnd: (List<LatLng> points) {
+    // Persist or process the complete geographic path.
+  },
+)
+```
+
+Drawing consumes the current single-finger gesture, so it does not pan or zoom
+the map. Set `drawingEnabled` to `false` and rebuild the widget to restore
+normal map gestures.
+
 ## Questions or Issues
 
 If you have questions about how to use HMS samples, try the following options:

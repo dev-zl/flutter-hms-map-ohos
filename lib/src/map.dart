@@ -105,6 +105,15 @@ class HuaweiMapController {
     _HuaweiMapMethodChannel.onLongPress(mapId: mapId).listen(
       (MapLongPressEvent e) => _huaweiMapState.onLongPress(e.position),
     );
+    _HuaweiMapMethodChannel.onDrawStart(mapId: mapId).listen(
+      (MapDrawStartEvent e) => _huaweiMapState.onDrawStart(e.position),
+    );
+    _HuaweiMapMethodChannel.onDrawUpdate(mapId: mapId).listen(
+      (MapDrawUpdateEvent e) => _huaweiMapState.onDrawUpdate(e.position),
+    );
+    _HuaweiMapMethodChannel.onDrawEnd(mapId: mapId).listen(
+      (MapDrawEndEvent e) => _huaweiMapState.onDrawEnd(e.value!),
+    );
     _HuaweiMapMethodChannel.onPoiClick(mapId: mapId).listen(
       (PoiClickEvent e) => _huaweiMapState.onPoiClick(e.pointOfInterest),
     );
@@ -738,6 +747,12 @@ class HuaweiMap extends StatefulWidget {
   /// Indicates whether to enable all gestures for a map.
   final bool? allGesturesEnabled;
 
+  /// Whether single-finger drawing on the map is enabled.
+  ///
+  /// While enabled, drawing gestures are consumed by the map and do not move
+  /// or zoom the camera.
+  final bool drawingEnabled;
+
   /// Indicates whether scroll gestures are enabled during rotation or zooming.
   final bool isScrollGesturesEnabledDuringRotateOrZoom;
 
@@ -802,6 +817,15 @@ class HuaweiMap extends StatefulWidget {
   /// Function to be called when a map is long clicked.
   final ArgumentCallback<LatLng>? onLongPress;
 
+  /// Function to be called when a map drawing gesture starts.
+  final ArgumentCallback<LatLng>? onDrawStart;
+
+  /// Function to be called when the current map drawing gesture moves.
+  final ArgumentCallback<LatLng>? onDrawUpdate;
+
+  /// Function to be called with the complete geographic path when drawing ends.
+  final ArgumentCallback<List<LatLng>>? onDrawEnd;
+
   /// Function to be called when a POI is tapped.
   final ArgumentCallback<PointOfInterest>? onPoiClick;
 
@@ -833,6 +857,7 @@ class HuaweiMap extends StatefulWidget {
     this.markersClusteringEnabled = false,
     this.buildingsEnabled = true,
     this.allGesturesEnabled,
+    this.drawingEnabled = false,
     this.isScrollGesturesEnabledDuringRotateOrZoom = true,
     this.gestureScaleByMapCenter = false,
     this.pointToCenter,
@@ -843,6 +868,9 @@ class HuaweiMap extends StatefulWidget {
     this.onCameraMoveCanceled,
     this.onClick,
     this.onLongPress,
+    this.onDrawStart,
+    this.onDrawUpdate,
+    this.onDrawEnd,
     this.onPoiClick,
     this.onMyLocationClick,
     this.onMyLocationButtonClick,
@@ -914,6 +942,18 @@ class _HuaweiMapState extends State<HuaweiMap> {
 
   void onLongPress(LatLng position) {
     widget.onLongPress?.call(position);
+  }
+
+  void onDrawStart(LatLng position) {
+    widget.onDrawStart?.call(position);
+  }
+
+  void onDrawUpdate(LatLng position) {
+    widget.onDrawUpdate?.call(position);
+  }
+
+  void onDrawEnd(List<LatLng> points) {
+    widget.onDrawEnd?.call(points);
   }
 
   void onPoiClick(PointOfInterest pointOfInterest) {

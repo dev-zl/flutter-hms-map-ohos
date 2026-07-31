@@ -69,6 +69,7 @@ export class MapController implements MethodCallHandler {
   setMethodChannel(channel: MethodChannel): void {
     hilog.info(0x0000, TAG, `setMethodChannel start id=${this.id}`);
     this.methodChannel = channel;
+    this.hmsMap.setMethodChannel(channel);
     this.mapUtils.setMethodChannel(channel);
     this.mapUtils.setMapController(this.mapController);
     this.mapListenerHandler = new MapListenerHandler(this.id, this.mapUtils, channel);
@@ -312,6 +313,9 @@ export class MapController implements MethodCallHandler {
   }
   setAllGesturesEnabled(enabled: boolean): void {
     try { this.mapController.setAllGesturesEnabled(enabled); } catch (e) { /* ignore */ }
+  }
+  setDrawingEnabled(enabled: boolean): void {
+    this.hmsMap.setDrawingEnabled(enabled);
   }
   setLatLngBounds(bounds: mapCommon.LatLngBounds): void {
     try { this.mapController.setLatLngBounds(bounds); } catch (e) { /* ignore */ }

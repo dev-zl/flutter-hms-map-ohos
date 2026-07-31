@@ -73,6 +73,24 @@ abstract class _HuaweiMapMethodChannel {
         .cast<MapLongPressEvent>();
   }
 
+  static Stream<MapDrawStartEvent> onDrawStart({required int mapId}) {
+    return _events(mapId)
+        .where((_) => _ is MapDrawStartEvent)
+        .cast<MapDrawStartEvent>();
+  }
+
+  static Stream<MapDrawUpdateEvent> onDrawUpdate({required int mapId}) {
+    return _events(mapId)
+        .where((_) => _ is MapDrawUpdateEvent)
+        .cast<MapDrawUpdateEvent>();
+  }
+
+  static Stream<MapDrawEndEvent> onDrawEnd({required int mapId}) {
+    return _events(mapId)
+        .where((_) => _ is MapDrawEndEvent)
+        .cast<MapDrawEndEvent>();
+  }
+
   // POINT OF INTEREST
 
   static Stream<PoiClickEvent> onPoiClick({required int mapId}) {
@@ -328,6 +346,33 @@ abstract class _HuaweiMapMethodChannel {
           MapLongPressEvent(
             mapId,
             LatLng.fromJson(call.arguments[_Param.position]),
+          ),
+        );
+        break;
+      case _Method.MapDrawStart:
+        _streamController.add(
+          MapDrawStartEvent(
+            mapId,
+            LatLng.fromJson(call.arguments[_Param.position]),
+          ),
+        );
+        break;
+      case _Method.MapDrawUpdate:
+        _streamController.add(
+          MapDrawUpdateEvent(
+            mapId,
+            LatLng.fromJson(call.arguments[_Param.position]),
+          ),
+        );
+        break;
+      case _Method.MapDrawEnd:
+        final List<dynamic> rawPoints = call.arguments[_Param.points];
+        _streamController.add(
+          MapDrawEndEvent(
+            mapId,
+            rawPoints
+                .map((dynamic point) => LatLng.fromJson(point))
+                .toList(growable: false),
           ),
         );
         break;

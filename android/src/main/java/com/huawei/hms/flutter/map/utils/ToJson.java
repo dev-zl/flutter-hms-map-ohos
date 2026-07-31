@@ -45,6 +45,14 @@ public class ToJson {
         return result;
     }
 
+    public static List<List<Double>> latLngList(final List<LatLng> latLngs) {
+        List<List<Double>> result = new ArrayList<>();
+        for (LatLng latLng : latLngs) {
+            result.add(latLng(latLng));
+        }
+        return result;
+    }
+
     public static HashMap<String, Object> cameraPosition(final CameraPosition position) {
         if (position == null) {
             return null;

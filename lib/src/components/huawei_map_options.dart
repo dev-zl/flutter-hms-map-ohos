@@ -36,6 +36,7 @@ class HuaweiMapOptions {
   final bool? markersClusteringEnabled;
   final bool? buildingsEnabled;
   final bool? allGesturesEnabled;
+  final bool? drawingEnabled;
   final bool? isScrollGesturesEnabledDuringRotateOrZoom;
   final bool? gestureScaleByMapCenter;
   final ScreenCoordinate? pointToCenter;
@@ -69,6 +70,7 @@ class HuaweiMapOptions {
     this.markersClusteringEnabled,
     this.buildingsEnabled,
     this.allGesturesEnabled,
+    this.drawingEnabled,
     this.isScrollGesturesEnabledDuringRotateOrZoom,
     this.gestureScaleByMapCenter,
     this.pointToCenter,
@@ -104,6 +106,7 @@ class HuaweiMapOptions {
       markersClusteringEnabled: map.markersClusteringEnabled,
       buildingsEnabled: map.buildingsEnabled,
       allGesturesEnabled: map.allGesturesEnabled,
+      drawingEnabled: map.drawingEnabled,
       isScrollGesturesEnabledDuringRotateOrZoom:
           map.isScrollGesturesEnabledDuringRotateOrZoom,
       gestureScaleByMapCenter: map.gestureScaleByMapCenter,
@@ -180,6 +183,7 @@ class HuaweiMapOptions {
     );
     addToMap(optionsMap, _Param.buildingsEnabled, buildingsEnabled);
     addToMap(optionsMap, _Param.allGesturesEnabled, allGesturesEnabled);
+    addToMap(optionsMap, _Param.drawingEnabled, drawingEnabled);
     addToMap(
       optionsMap,
       _Param.isScrollGesturesEnabledDuringRotateOrZoom,

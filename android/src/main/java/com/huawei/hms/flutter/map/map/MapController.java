@@ -21,12 +21,16 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,6 +64,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.platform.PlatformView;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,6 +90,20 @@ final class MapController
     private final ActivityPluginBinding activityPluginBinding;
 
     private final MapView mapView;
+
+    private final FrameLayout mapContainer;
+
+    private final View drawingTouchView;
+
+    private final List<LatLng> drawingPoints = new ArrayList<>();
+
+    private boolean drawingEnabled = false;
+
+    private Point lastDrawingPoint;
+
+    private boolean drawingInProgress = false;
+
+    private int drawingPointerId = MotionEvent.INVALID_POINTER_ID;
 
     private HuaweiMap huaweiMap;
 
@@ -158,6 +177,16 @@ final class MapController
         this.context = context;
         this.activityState = activityState;
         mapView = new MapView(mActivity, options);
+        mapContainer = new FrameLayout(mActivity);
+        mapContainer.addView(mapView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        drawingTouchView = new View(mActivity);
+        drawingTouchView.setBackgroundColor(Color.TRANSPARENT);
+        drawingTouchView.setClickable(true);
+        drawingTouchView.setVisibility(View.GONE);
+        drawingTouchView.setOnTouchListener((view, event) -> handleDrawingTouch(event));
+        mapContainer.addView(drawingTouchView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         compactness = context.getResources().getDisplayMetrics().density;
         messenger = binaryMessenger;
         methodChannel = new MethodChannel(binaryMessenger, Channel.CHANNEL + "_" + id);
@@ -173,7 +202,87 @@ final class MapController
 
     @Override
     public View getView() {
-        return mapView;
+        return mapContainer;
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private boolean handleDrawingTouch(final MotionEvent event) {
+        if (!drawingEnabled) {
+            return false;
+        }
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                drawingPoints.clear();
+                lastDrawingPoint = null;
+                drawingInProgress = true;
+                drawingPointerId = event.getPointerId(0);
+                appendDrawingPoint(event.getX(0), event.getY(0), Method.MAP_ON_DRAW_START);
+                return true;
+            case MotionEvent.ACTION_MOVE:
+                if (drawingInProgress) {
+                    final int pointerIndex = event.findPointerIndex(drawingPointerId);
+                    if (pointerIndex >= 0) {
+                        appendDrawingPoint(
+                            event.getX(pointerIndex), event.getY(pointerIndex), Method.MAP_ON_DRAW_UPDATE);
+                    }
+                }
+                return true;
+            case MotionEvent.ACTION_UP:
+                if (drawingInProgress) {
+                    appendDrawingPoint(event.getX(0), event.getY(0), null);
+                    finishDrawing();
+                }
+                return true;
+            case MotionEvent.ACTION_POINTER_UP:
+                if (drawingInProgress
+                    && event.getPointerId(event.getActionIndex()) == drawingPointerId) {
+                    appendDrawingPoint(
+                        event.getX(event.getActionIndex()), event.getY(event.getActionIndex()), null);
+                    finishDrawing();
+                }
+                return true;
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_CANCEL:
+                if (drawingInProgress) {
+                    finishDrawing();
+                }
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    private void appendDrawingPoint(final float x, final float y, @Nullable final String eventMethod) {
+        if (huaweiMap == null) {
+            return;
+        }
+
+        final Point screenPoint = new Point(Math.round(x), Math.round(y));
+        if (screenPoint.equals(lastDrawingPoint)) {
+            return;
+        }
+
+        final LatLng latLng = huaweiMap.getProjection().fromScreenLocation(screenPoint);
+        drawingPoints.add(latLng);
+        lastDrawingPoint = screenPoint;
+        if (eventMethod != null) {
+            final HashMap<String, Object> args = new HashMap<>();
+            args.put(Param.POSITION, ToJson.latLng(latLng));
+            methodChannel.invokeMethod(eventMethod, args);
+        }
+    }
+
+    private void finishDrawing() {
+        if (!drawingPoints.isEmpty()) {
+            final HashMap<String, Object> args = new HashMap<>();
+            args.put(Param.POINTS, ToJson.latLngList(drawingPoints));
+            methodChannel.invokeMethod(Method.MAP_ON_DRAW_END, args);
+        }
+        drawingPoints.clear();
+        lastDrawingPoint = null;
+        drawingInProgress = false;
+        drawingPointerId = MotionEvent.INVALID_POINTER_ID;
     }
 
     void init() {
@@ -450,6 +559,8 @@ final class MapController
             return;
         }
         disposed = true;
+        drawingTouchView.setOnTouchListener(null);
+        drawingPoints.clear();
         methodChannel.setMethodCallHandler(null);
         mapListenerHandler.setMapListener(null);
         getApplication().unregisterActivityLifecycleCallbacks(this);
@@ -681,6 +792,18 @@ final class MapController
             huaweiMap.getUiSettings().setAllGesturesEnabled(allGesturesEnabled);
             logger.sendSingleEvent("MapController-setAllGesturesEnabled");
         }
+    }
+
+    @Override
+    public void setDrawingEnabled(final boolean drawingEnabled) {
+        if (this.drawingEnabled == drawingEnabled) {
+            return;
+        }
+        if (!drawingEnabled && drawingInProgress) {
+            finishDrawing();
+        }
+        this.drawingEnabled = drawingEnabled;
+        drawingTouchView.setVisibility(drawingEnabled ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -1002,4 +1125,3 @@ final class MapController
         return location;
     }
 }
-

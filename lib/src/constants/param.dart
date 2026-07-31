@@ -67,6 +67,8 @@ abstract class _Param {
 
   static const String position = 'position';
 
+  static const String drawingEnabled = 'drawingEnabled';
+
   static const String reason = 'reason';
 
   static const String markerId = 'markerId';

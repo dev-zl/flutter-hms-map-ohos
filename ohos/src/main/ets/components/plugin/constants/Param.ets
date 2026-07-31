@@ -108,6 +108,7 @@ export class Param {
 
   // Camera / Map options
   static readonly POSITION: string = 'position';
+  static readonly DRAWING_ENABLED: string = 'drawingEnabled';
   static readonly REASON: string = 'reason';
   static readonly COMPASS_ENABLED: string = 'compassEnabled';
   static readonly IS_DARK: string = 'isDark';
