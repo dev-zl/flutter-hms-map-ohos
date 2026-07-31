@@ -16,7 +16,7 @@
 
 part of '../../huawei_map_ohos.dart';
 
-/// A lightweight, non-interactive point rendered by HarmonyOS MassPointOverlay.
+/// A lightweight, non-interactive point rendered by a shared map overlay.
 ///
 /// The radius is measured in logical screen pixels, so it stays the same size
 /// while the map zoom changes. Mass points are append-only and need no ID.

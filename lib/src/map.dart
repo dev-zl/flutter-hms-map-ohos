@@ -198,8 +198,8 @@ class HuaweiMapController {
 
   /// Appends lightweight, non-interactive points without rebuilding [HuaweiMap].
   ///
-  /// This uses HarmonyOS Map Kit's native MassPointOverlay. Points keep their
-  /// screen radius while zooming and do not need IDs.
+  /// HarmonyOS uses Map Kit's native MassPointOverlay; Android uses one shared
+  /// overlay view. Points keep their screen radius while zooming and need no IDs.
   Future<void> addMassPoints(Iterable<MassPoint> massPoints) {
     final List<MassPoint> values = massPoints.toList(growable: false);
     if (values.isEmpty) {
@@ -612,6 +612,30 @@ class HuaweiMapController {
   /// The location on the screen is specified in screen pixels (instead of display pixels) relative to the top left corner of the map (instead of the top left corner of the screen).
   Future<LatLng> getLatLng(ScreenCoordinate screenCoordinate) {
     return _HuaweiMapMethodChannel.getLatLng(screenCoordinate, mapId: mapId);
+  }
+
+  /// Converts a Flutter touch position into longitude and latitude.
+  ///
+  /// [localPosition] must be a logical-pixel position relative to the map's
+  /// top-left corner, such as [PointerEvent.localPosition]. The plugin converts
+  /// it to the physical screen pixels required by the native map projection.
+  Future<LatLng> getLatLngFromTouch(Offset localPosition) {
+    if (!localPosition.dx.isFinite || !localPosition.dy.isFinite) {
+      throw ArgumentError.value(
+        localPosition,
+        'localPosition',
+        'Touch coordinates must be finite.',
+      );
+    }
+
+    final double devicePixelRatio =
+        MediaQuery.of(_huaweiMapState.context).devicePixelRatio;
+    return getLatLng(
+      ScreenCoordinate(
+        x: (localPosition.dx * devicePixelRatio).round(),
+        y: (localPosition.dy * devicePixelRatio).round(),
+      ),
+    );
   }
 
   /// Displays an information window for a marker.

@@ -70,8 +70,8 @@ Single-object and batch APIs are available for `Marker`, `Polyline`, `Polygon`,
 platform-channel call. These overlays are managed exclusively through
 `HuaweiMapController`; `HuaweiMap` no longer accepts overlay set properties.
 
-HarmonyOS 6.0.0(20) and later also supports append-only, non-interactive mass
-points. Each call can add a batch without assigning IDs:
+Android and HarmonyOS 6.0.0(20) and later support append-only, non-interactive
+mass points. Each call can add a batch without assigning IDs:
 
 ```dart
 await controller.addMassPoints([
@@ -85,7 +85,9 @@ await controller.addMassPoints([
 
 `screenRadius` stays visually fixed while zooming. Points with different colors
 or radii are automatically grouped into native `MassPointOverlay` instances.
-This API is not available in the Android Huawei Map SDK.
+HarmonyOS uses Map Kit's native `MassPointOverlay`. Because Huawei Map Kit for
+Android has no matching overlay, Android draws all points in one shared,
+non-interactive view and reprojects them when the camera moves.
 
 ## Draw on the map
 
@@ -114,6 +116,27 @@ HuaweiMap(
 Drawing consumes the current single-finger gesture, so it does not pan or zoom
 the map. Set `drawingEnabled` to `false` and rebuild the widget to restore
 normal map gestures.
+
+To convert a Flutter touch coordinate independently, pass the map-local logical
+position directly to the controller:
+
+```dart
+Listener(
+  onPointerMove: (PointerMoveEvent event) async {
+    final LatLng point =
+        await controller.getLatLngFromTouch(event.localPosition);
+    // Use the geographic point.
+  },
+  child: HuaweiMap(
+    initialCameraPosition: initialCameraPosition,
+    onMapCreated: (HuaweiMapController value) => controller = value,
+  ),
+)
+```
+
+`getLatLngFromTouch` applies the current view's device-pixel ratio internally.
+Do not multiply `event.localPosition` by a density value yourself. The supplied
+position must be relative to the map's top-left corner.
 
 ## Questions or Issues
 
