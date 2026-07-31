@@ -71,7 +71,7 @@ class MapUtils {
         this.compactness = compactness;
 
         markersUtils = new MarkersUtils(mChannel, application);
-        polylineUtils = new PolylineUtils(mChannel, compactness, application);
+        polylineUtils = new PolylineUtils(mChannel, application);
         polygonUtils = new PolygonUtils(mChannel, compactness, application);
         circleUtils = new CircleUtils(mChannel, compactness, application);
         groundOverlayUtils = new GroundOverlayUtils(mChannel, application);

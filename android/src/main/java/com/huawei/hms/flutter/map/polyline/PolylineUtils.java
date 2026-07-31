@@ -38,19 +38,16 @@ public class PolylineUtils {
 
     private final MethodChannel mChannel;
 
-    private final float compactness;
-
     private final Map<String, PolylineController> idsOnMap;
 
     private final Map<String, String> ids;
 
     private final HMSLogger logger;
 
-    public PolylineUtils(final MethodChannel mChannel, final float compactness, final Application application) {
+    public PolylineUtils(final MethodChannel mChannel, final Application application) {
         idsOnMap = new HashMap<>();
         ids = new HashMap<>();
         this.mChannel = mChannel;
-        this.compactness = compactness;
         logger = HMSLogger.getInstance(application);
 
     }
@@ -67,7 +64,7 @@ public class PolylineUtils {
             return;
         }
 
-        final PolylineBuilder polylineBuilder = new PolylineBuilder(compactness);
+        final PolylineBuilder polylineBuilder = new PolylineBuilder();
         final String polylineId = Convert.processPolylineOptions(polyline, polylineBuilder);
         final PolylineOptions options = polylineBuilder.build();
 
@@ -75,8 +72,7 @@ public class PolylineUtils {
         final Polyline newPolyline = huaweiMap.addPolyline(options);
         logger.sendSingleEvent("addPolyline");
 
-        final PolylineController controller = new PolylineController(newPolyline, polylineBuilder.isClickable(),
-            compactness);
+        final PolylineController controller = new PolylineController(newPolyline, polylineBuilder.isClickable());
         idsOnMap.put(polylineId, controller);
         ids.put(newPolyline.getId(), polylineId);
     }

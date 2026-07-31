@@ -30,12 +30,9 @@ class PolylineController implements PolylineMethods {
 
     private boolean clickable;
 
-    private final float compactness;
-
-    PolylineController(final Polyline polyline, final boolean clickable, final float compactness) {
+    PolylineController(final Polyline polyline, final boolean clickable) {
         this.polyline = polyline;
         this.clickable = clickable;
-        this.compactness = compactness;
         mapPolylineId = polyline.getId();
     }
 
@@ -92,7 +89,9 @@ class PolylineController implements PolylineMethods {
 
     @Override
     public void setWidth(final float width) {
-        polyline.setWidth(width * compactness);
+        // Keep updates consistent with PolylineBuilder: width is already in
+        // the logical unit expected by Huawei Map.
+        polyline.setWidth(width);
     }
 
     @Override

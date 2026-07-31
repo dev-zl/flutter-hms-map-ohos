@@ -28,11 +28,8 @@ class PolylineBuilder implements PolylineMethods {
 
     private boolean clickable;
 
-    private final float compactness;
-
-    PolylineBuilder(final float compactness) {
+    PolylineBuilder() {
         polylineOptions = new PolylineOptions();
-        this.compactness = compactness;
     }
 
     PolylineOptions build() {
@@ -95,7 +92,10 @@ class PolylineBuilder implements PolylineMethods {
 
     @Override
     public void setWidth(final float width) {
-        polylineOptions.width(width * compactness);
+        // Huawei Map already renders this value using the device scale.
+        // Multiplying by density here makes a Flutter logical-pixel width
+        // visibly thicker after a live CustomPaint stroke becomes a polyline.
+        polylineOptions.width(width);
     }
 
     @Override
