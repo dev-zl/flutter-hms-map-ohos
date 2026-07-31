@@ -89,6 +89,11 @@ export class MapController implements MethodCallHandler {
       return;
     }
 
+    // StandardMethodCodec 会把 Dart Map 解码为 ArkTS Map。统一转成普通
+    // Record 后才能通过 args['cameraUpdate'] 等方式读取命名参数，否则相机
+    // 更新会拿到 undefined，并被转换器静默替换为默认坐标。
+    const normalizedArgs = Convert.normalizeCodecValue(call.args);
+
     switch (call.method) {
       case Method.MAP_WAIT_FOR_MAP:
         hilog.info(0x0000, TAG, `MAP_WAIT_FOR_MAP success id=${this.id}`);
@@ -96,7 +101,7 @@ export class MapController implements MethodCallHandler {
         break;
 
       case Method.MAP_UPDATE: {
-        const args = (call.args ?? {}) as Record<string, Object>;
+        const args = (normalizedArgs ?? {}) as Record<string, Object>;
         const options = (args[Param.OPTIONS] as Record<string, Object>) ?? {};
         Convert.processMapOptions(options, this);
         try {
@@ -121,7 +126,7 @@ export class MapController implements MethodCallHandler {
 
       case Method.MAP_GET_SCREEN_COORDINATE: {
         try {
-          const latLng = Convert.toLatLng(call.args);
+          const latLng = Convert.toLatLng(normalizedArgs);
           const proj = this.mapController.getProjection();
           const point = proj.toScreenLocation(latLng);
           result.success(ToJson.point(point));
@@ -133,7 +138,7 @@ export class MapController implements MethodCallHandler {
 
       case Method.MAP_GET_LAT_LNG: {
         try {
-          const pt = Convert.toPoint(call.args);
+          const pt = Convert.toPoint(normalizedArgs);
           const proj = this.mapController.getProjection();
           const latLng = proj.fromScreenLocation(pt);
           result.success(ToJson.latLng(latLng));
@@ -145,7 +150,7 @@ export class MapController implements MethodCallHandler {
 
       case Method.CAMERA_MOVE: {
         try {
-          const args = (call.args ?? {}) as Record<string, Object>;
+          const args = (normalizedArgs ?? {}) as Record<string, Object>;
           const cameraUpdate = AnimationConvert.toCameraUpdate(args[Param.CAMERA_UPDATE]);
           this.mapController.moveCamera(cameraUpdate);
           result.success(null);
@@ -157,7 +162,7 @@ export class MapController implements MethodCallHandler {
 
       case Method.CAMERA_ANIMATE: {
         try {
-          const args = (call.args ?? {}) as Record<string, Object>;
+          const args = (normalizedArgs ?? {}) as Record<string, Object>;
           const cameraUpdate = AnimationConvert.toCameraUpdate(args[Param.CAMERA_UPDATE]);
           this.mapController.animateCamera(cameraUpdate);
           result.success(null);
@@ -189,7 +194,7 @@ export class MapController implements MethodCallHandler {
 
       case Method.SET_LOCATION: {
         try {
-          const latLng = Convert.toLatLng(call.args);
+          const latLng = Convert.toLatLng(normalizedArgs);
           // mapController.setMyLocation expects a geoLocationManager.Location
           // with all fields populated (none are optional). We synthesize
           // sensible defaults for fields Flutter doesn't provide.

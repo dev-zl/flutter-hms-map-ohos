@@ -46,6 +46,30 @@ Please see [pub.dev](https://pub.dev/packages/huawei_map/install) and [AppGaller
 - [Quick Start](https://developer.huawei.com/consumer/en/doc/HMS-Plugin-Guides/createmap-0000001050190759-V1?ha_source=hms1)
 - [Reference](https://developer.huawei.com/consumer/en/doc/HMS-Plugin-References/overview-0000001051586849-V1?ha_source=hms1)
 
+## Imperative overlays
+
+Markers and all other overlay types can be changed through
+`HuaweiMapController` without rebuilding `HuaweiMap`:
+
+```dart
+final Marker marker = Marker(
+  markerId: const MarkerId('destination'),
+  position: const LatLng(39.9042, 116.4074),
+);
+
+await controller.addMarker(marker);
+await controller.updateMarker(
+  marker.updateCopy(position: const LatLng(31.2304, 121.4737)),
+);
+await controller.removeMarker(marker.markerId);
+```
+
+Single-object and batch APIs are available for `Marker`, `Polyline`, `Polygon`,
+`Circle`, `GroundOverlay`, `TileOverlay`, and `HeatMap`. For example,
+`addMarkers`, `updateMarkers`, and `removeMarkers` send the whole batch in one
+platform-channel call. Do not manage the same overlay ID through both a
+`HuaweiMap` set property and the controller API.
+
 ## Questions or Issues
 
 If you have questions about how to use HMS samples, try the following options:

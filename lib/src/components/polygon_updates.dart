@@ -21,6 +21,16 @@ class PolygonUpdates {
   late Set<PolygonId> deleteSet;
   late Set<Polygon> updateSet;
 
+  PolygonUpdates._command({
+    Set<Polygon> inserts = const <Polygon>{},
+    Set<PolygonId> deletes = const <PolygonId>{},
+    Set<Polygon> updates = const <Polygon>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   PolygonUpdates.update(Set<Polygon> previous, Set<Polygon> current) {
     final Map<PolygonId, Polygon> oldPolygons = polygonToMap(previous);
     final Map<PolygonId, Polygon> currPolygons = polygonToMap(current);

@@ -21,6 +21,16 @@ class CircleUpdates {
   late Set<CircleId> deleteSet;
   late Set<Circle> updateSet;
 
+  CircleUpdates._command({
+    Set<Circle> inserts = const <Circle>{},
+    Set<CircleId> deletes = const <CircleId>{},
+    Set<Circle> updates = const <Circle>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   CircleUpdates.update(Set<Circle> previous, Set<Circle> current) {
     final Map<CircleId, Circle> oldCircles = circleToMap(previous);
     final Map<CircleId, Circle> currCircles = circleToMap(current);

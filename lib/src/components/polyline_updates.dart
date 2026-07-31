@@ -21,6 +21,16 @@ class PolylineUpdates {
   late Set<PolylineId> deleteSet;
   late Set<Polyline> updateSet;
 
+  PolylineUpdates._command({
+    Set<Polyline> inserts = const <Polyline>{},
+    Set<PolylineId> deletes = const <PolylineId>{},
+    Set<Polyline> updates = const <Polyline>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   bool isChanged(
     Polyline current,
     Map<PolylineId, Polyline> previousPolylines,

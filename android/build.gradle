@@ -1,42 +1,17 @@
 group 'com.huawei.hms.flutter.map'
 version '1.0'
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://developer.huawei.com/repo/' }
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.3.0'
-        classpath 'com.huawei.agconnect:agcp:1.9.1.300'
-    }
+repositories {
+    google()
+    mavenCentral()
+    maven { url 'https://developer.huawei.com/repo/' }
 }
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://developer.huawei.com/repo/' }
-    }
-}
-
-rootProject.buildDir = '../build'
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(':app')
-}
-
 
 apply plugin: 'com.android.library'
 
 android {
     namespace "com.huawei.hms.flutter.map"
     compileSdkVersion 34
-    buildToolsVersion "34.0.0"
 
     defaultConfig {
         minSdkVersion 20
@@ -55,5 +30,8 @@ android {
 
 dependencies {
     implementation 'com.huawei.hms:maps:6.11.2.301'
+    implementation 'com.huawei.hms:maps-basic:6.11.2.301'
+    // HMS Core resources include an AppCompat-based theme and its color attributes.
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.interpolator:interpolator:1.0.0'
 }

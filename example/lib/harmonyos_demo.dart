@@ -28,6 +28,7 @@ class HarmonyOSMapDemo extends StatefulWidget {
 
 class _HarmonyOSMapDemoState extends State<HarmonyOSMapDemo> {
   HuaweiMapController? _controller;
+  int _nextMarkerId = 0;
   String _platformInfo = '检测平台中...';
   String _mapInfo = '地图未创建';
 
@@ -133,7 +134,7 @@ class _HarmonyOSMapDemoState extends State<HarmonyOSMapDemo> {
                   strokeWidth: 2,
                 ),
               },
-              onCameraMoveStarted: (int?  i) {
+              onCameraMoveStarted: (int? i) {
                 print('相机开始移动');
               },
               onCameraMove: (CameraPosition position) {
@@ -232,11 +233,14 @@ class _HarmonyOSMapDemoState extends State<HarmonyOSMapDemo> {
             child: Text('取消'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                _controller;
-              });
+              final Marker marker = Marker(
+                markerId: MarkerId('command_marker_${_nextMarkerId++}'),
+                position: position,
+                infoWindow: InfoWindow(title: '命令式 Marker'),
+              );
+              await _controller!.addMarker(marker);
             },
             child: Text('确定'),
           ),

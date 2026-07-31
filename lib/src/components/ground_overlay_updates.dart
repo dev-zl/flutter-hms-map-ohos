@@ -21,6 +21,16 @@ class GroundOverlayUpdates {
   late Set<GroundOverlayId> deleteSet;
   late Set<GroundOverlay> updateSet;
 
+  GroundOverlayUpdates._command({
+    Set<GroundOverlay> inserts = const <GroundOverlay>{},
+    Set<GroundOverlayId> deletes = const <GroundOverlayId>{},
+    Set<GroundOverlay> updates = const <GroundOverlay>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   GroundOverlayUpdates.update(
     Set<GroundOverlay> previous,
     Set<GroundOverlay> current,

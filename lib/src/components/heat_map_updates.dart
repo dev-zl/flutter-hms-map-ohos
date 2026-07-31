@@ -21,6 +21,16 @@ class HeatMapUpdates {
   late Set<HeatMapId> deleteSet;
   late Set<HeatMap> updateSet;
 
+  HeatMapUpdates._command({
+    Set<HeatMap> inserts = const <HeatMap>{},
+    Set<HeatMapId> deletes = const <HeatMapId>{},
+    Set<HeatMap> updates = const <HeatMap>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   HeatMapUpdates.update(Set<HeatMap> previous, Set<HeatMap> current) {
     final Map<HeatMapId, HeatMap> oldHeatMaps = heatMapToMap(previous);
     final Map<HeatMapId, HeatMap> currHeatMaps = heatMapToMap(current);

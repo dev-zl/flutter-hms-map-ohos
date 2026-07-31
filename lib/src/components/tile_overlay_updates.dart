@@ -21,6 +21,16 @@ class TileOverlayUpdates {
   late Set<TileOverlayId> deleteSet;
   late Set<TileOverlay> updateSet;
 
+  TileOverlayUpdates._command({
+    Set<TileOverlay> inserts = const <TileOverlay>{},
+    Set<TileOverlayId> deletes = const <TileOverlayId>{},
+    Set<TileOverlay> updates = const <TileOverlay>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   TileOverlayUpdates.update(
     Set<TileOverlay> previous,
     Set<TileOverlay> current,

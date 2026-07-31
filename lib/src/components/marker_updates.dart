@@ -21,6 +21,16 @@ class MarkerUpdates {
   late Set<MarkerId> deleteSet;
   late Set<Marker> updateSet;
 
+  MarkerUpdates._command({
+    Set<Marker> inserts = const <Marker>{},
+    Set<MarkerId> deletes = const <MarkerId>{},
+    Set<Marker> updates = const <Marker>{},
+  }) {
+    insertSet = inserts;
+    deleteSet = deletes;
+    updateSet = updates;
+  }
+
   MarkerUpdates.update(Set<Marker> previous, Set<Marker> current) {
     final Map<MarkerId, Marker> oldMarkers = markerToMap(previous);
     final Map<MarkerId, Marker> currMarkers = markerToMap(current);

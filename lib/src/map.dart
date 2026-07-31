@@ -42,39 +42,113 @@ class HuaweiMapController {
 
   final _HuaweiMapState _huaweiMapState;
 
+  final Map<MarkerId, Marker> _commandMarkers = <MarkerId, Marker>{};
+  final Map<PolylineId, Polyline> _commandPolylines = <PolylineId, Polyline>{};
+  final Map<PolygonId, Polygon> _commandPolygons = <PolygonId, Polygon>{};
+  final Map<CircleId, Circle> _commandCircles = <CircleId, Circle>{};
+  final Map<GroundOverlayId, GroundOverlay> _commandGroundOverlays =
+      <GroundOverlayId, GroundOverlay>{};
+
   void _connectStreams(int mapId) {
     _HuaweiMapMethodChannel.onMarkerClick(mapId: mapId).listen(
-      (MarkerClickEvent e) => _huaweiMapState.onMarkerClick(e.value!),
+      (MarkerClickEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.onClick?.call();
+        } else {
+          _huaweiMapState.onMarkerClick(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onMarkerDragEnd(mapId: mapId).listen(
-      (MarkerDragEndEvent e) =>
-          _huaweiMapState.onMarkerDragEnd(e.value!, e.position),
+      (MarkerDragEndEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.onDragEnd?.call(e.position);
+        } else {
+          _huaweiMapState.onMarkerDragEnd(e.value!, e.position);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onMarkerDragStart(mapId: mapId).listen(
-      (MarkerDragStartEvent e) =>
-          _huaweiMapState.onMarkerDragStart(e.value!, e.position),
+      (MarkerDragStartEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.onDragStart?.call(e.position);
+        } else {
+          _huaweiMapState.onMarkerDragStart(e.value!, e.position);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onMarkerDrag(mapId: mapId).listen(
-      (MarkerDragEvent e) => _huaweiMapState.onMarkerDrag(e.value!, e.position),
+      (MarkerDragEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.onDrag?.call(e.position);
+        } else {
+          _huaweiMapState.onMarkerDrag(e.value!, e.position);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onInfoWindowClick(mapId: mapId).listen(
-      (InfoWindowClickEvent e) => _huaweiMapState.onInfoWindowClick(e.value!),
+      (InfoWindowClickEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.infoWindow.onClick?.call();
+        } else {
+          _huaweiMapState.onInfoWindowClick(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onInfoWindowLongClick(mapId: mapId).listen(
-      (InfoWindowLongClickEvent e) =>
-          _huaweiMapState.onInfoWindowLongClick(e.value!),
+      (InfoWindowLongClickEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.infoWindow.onLongClick?.call();
+        } else {
+          _huaweiMapState.onInfoWindowLongClick(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onInfoWindowClose(mapId: mapId).listen(
-      (InfoWindowCloseEvent e) => _huaweiMapState.onInfoWindowClose(e.value!),
+      (InfoWindowCloseEvent e) {
+        final Marker? marker = _commandMarkers[e.value];
+        if (marker != null) {
+          marker.infoWindow.onClose?.call();
+        } else {
+          _huaweiMapState.onInfoWindowClose(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onPolylineClick(mapId: mapId).listen(
-      (PolylineClickEvent e) => _huaweiMapState.onPolylineClick(e.value!),
+      (PolylineClickEvent e) {
+        final Polyline? polyline = _commandPolylines[e.value];
+        if (polyline != null) {
+          polyline.onClick?.call();
+        } else {
+          _huaweiMapState.onPolylineClick(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onPolygonClick(mapId: mapId).listen(
-      (PolygonClickEvent e) => _huaweiMapState.onPolygonClick(e.value!),
+      (PolygonClickEvent e) {
+        final Polygon? polygon = _commandPolygons[e.value];
+        if (polygon != null) {
+          polygon.onClick?.call();
+        } else {
+          _huaweiMapState.onPolygonClick(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onCircleClick(mapId: mapId).listen(
-      (CircleClickEvent e) => _huaweiMapState.onCircleClick(e.value!),
+      (CircleClickEvent e) {
+        final Circle? circle = _commandCircles[e.value];
+        if (circle != null) {
+          circle.onClick?.call();
+        } else {
+          _huaweiMapState.onCircleClick(e.value!);
+        }
+      },
     );
     _HuaweiMapMethodChannel.onClick(mapId: mapId)
         .listen((MapClickEvent e) => _huaweiMapState.onClick(e.position));
@@ -92,8 +166,14 @@ class HuaweiMapController {
           _huaweiMapState.onMyLocationButtonClick(e.onMyLocationButtonClicked),
     );
     _HuaweiMapMethodChannel.onGroundOverlayClick(mapId: mapId).listen(
-      (GroundOverlayClickEvent e) =>
-          _huaweiMapState.onGroundOverlayClick(e.value!),
+      (GroundOverlayClickEvent e) {
+        final GroundOverlay? overlay = _commandGroundOverlays[e.value];
+        if (overlay != null) {
+          overlay.onClick?.call();
+        } else {
+          _huaweiMapState.onGroundOverlayClick(e.value!);
+        }
+      },
     );
     if (_huaweiMapState.widget.onCameraMoveStarted != null) {
       _HuaweiMapMethodChannel.onCameraMoveStarted(mapId: mapId).listen(
@@ -160,6 +240,330 @@ class HuaweiMapController {
 
   Future<void> _updateHeatMaps(HeatMapUpdates heatMapUpdates) {
     return _HuaweiMapMethodChannel.updateHeatMaps(heatMapUpdates, mapId: mapId);
+  }
+
+  /// Adds a marker without rebuilding [HuaweiMap].
+  Future<void> addMarker(Marker marker) => addMarkers(<Marker>[marker]);
+
+  /// Adds markers in one platform-channel call.
+  Future<void> addMarkers(Iterable<Marker> markers) async {
+    final Set<Marker> values = markers.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateMarkers(MarkerUpdates._command(inserts: values));
+    for (final Marker marker in values) {
+      _commandMarkers[marker.markerId] = marker;
+    }
+  }
+
+  /// Updates a marker without rebuilding [HuaweiMap].
+  Future<void> updateMarker(Marker marker) => updateMarkers(<Marker>[marker]);
+
+  /// Updates markers in one platform-channel call.
+  Future<void> updateMarkers(Iterable<Marker> markers) async {
+    final Set<Marker> values = markers.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateMarkers(MarkerUpdates._command(updates: values));
+    for (final Marker marker in values) {
+      _commandMarkers[marker.markerId] = marker;
+    }
+  }
+
+  /// Removes a marker without rebuilding [HuaweiMap].
+  Future<void> removeMarker(MarkerId markerId) =>
+      removeMarkers(<MarkerId>[markerId]);
+
+  /// Removes markers in one platform-channel call.
+  Future<void> removeMarkers(Iterable<MarkerId> markerIds) async {
+    final Set<MarkerId> values = markerIds.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateMarkers(MarkerUpdates._command(deletes: values));
+    for (final MarkerId markerId in values) {
+      _commandMarkers.remove(markerId);
+    }
+  }
+
+  /// Adds a polyline without rebuilding [HuaweiMap].
+  Future<void> addPolyline(Polyline polyline) =>
+      addPolylines(<Polyline>[polyline]);
+
+  /// Adds polylines in one platform-channel call.
+  Future<void> addPolylines(Iterable<Polyline> polylines) async {
+    final Set<Polyline> values = polylines.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updatePolylines(PolylineUpdates._command(inserts: values));
+    for (final Polyline polyline in values) {
+      _commandPolylines[polyline.polylineId] = polyline;
+    }
+  }
+
+  /// Updates a polyline without rebuilding [HuaweiMap].
+  Future<void> updatePolyline(Polyline polyline) =>
+      updatePolylines(<Polyline>[polyline]);
+
+  /// Updates polylines in one platform-channel call.
+  Future<void> updatePolylines(Iterable<Polyline> polylines) async {
+    final Set<Polyline> values = polylines.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updatePolylines(PolylineUpdates._command(updates: values));
+    for (final Polyline polyline in values) {
+      _commandPolylines[polyline.polylineId] = polyline;
+    }
+  }
+
+  /// Removes a polyline without rebuilding [HuaweiMap].
+  Future<void> removePolyline(PolylineId polylineId) =>
+      removePolylines(<PolylineId>[polylineId]);
+
+  /// Removes polylines in one platform-channel call.
+  Future<void> removePolylines(Iterable<PolylineId> polylineIds) async {
+    final Set<PolylineId> values = polylineIds.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updatePolylines(PolylineUpdates._command(deletes: values));
+    for (final PolylineId polylineId in values) {
+      _commandPolylines.remove(polylineId);
+    }
+  }
+
+  /// Adds a polygon without rebuilding [HuaweiMap].
+  Future<void> addPolygon(Polygon polygon) => addPolygons(<Polygon>[polygon]);
+
+  /// Adds polygons in one platform-channel call.
+  Future<void> addPolygons(Iterable<Polygon> polygons) async {
+    final Set<Polygon> values = polygons.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updatePolygons(PolygonUpdates._command(inserts: values));
+    for (final Polygon polygon in values) {
+      _commandPolygons[polygon.polygonId] = polygon;
+    }
+  }
+
+  /// Updates a polygon without rebuilding [HuaweiMap].
+  Future<void> updatePolygon(Polygon polygon) =>
+      updatePolygons(<Polygon>[polygon]);
+
+  /// Updates polygons in one platform-channel call.
+  Future<void> updatePolygons(Iterable<Polygon> polygons) async {
+    final Set<Polygon> values = polygons.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updatePolygons(PolygonUpdates._command(updates: values));
+    for (final Polygon polygon in values) {
+      _commandPolygons[polygon.polygonId] = polygon;
+    }
+  }
+
+  /// Removes a polygon without rebuilding [HuaweiMap].
+  Future<void> removePolygon(PolygonId polygonId) =>
+      removePolygons(<PolygonId>[polygonId]);
+
+  /// Removes polygons in one platform-channel call.
+  Future<void> removePolygons(Iterable<PolygonId> polygonIds) async {
+    final Set<PolygonId> values = polygonIds.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updatePolygons(PolygonUpdates._command(deletes: values));
+    for (final PolygonId polygonId in values) {
+      _commandPolygons.remove(polygonId);
+    }
+  }
+
+  /// Adds a circle without rebuilding [HuaweiMap].
+  Future<void> addCircle(Circle circle) => addCircles(<Circle>[circle]);
+
+  /// Adds circles in one platform-channel call.
+  Future<void> addCircles(Iterable<Circle> circles) async {
+    final Set<Circle> values = circles.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateCircles(CircleUpdates._command(inserts: values));
+    for (final Circle circle in values) {
+      _commandCircles[circle.circleId] = circle;
+    }
+  }
+
+  /// Updates a circle without rebuilding [HuaweiMap].
+  Future<void> updateCircle(Circle circle) => updateCircles(<Circle>[circle]);
+
+  /// Updates circles in one platform-channel call.
+  Future<void> updateCircles(Iterable<Circle> circles) async {
+    final Set<Circle> values = circles.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateCircles(CircleUpdates._command(updates: values));
+    for (final Circle circle in values) {
+      _commandCircles[circle.circleId] = circle;
+    }
+  }
+
+  /// Removes a circle without rebuilding [HuaweiMap].
+  Future<void> removeCircle(CircleId circleId) =>
+      removeCircles(<CircleId>[circleId]);
+
+  /// Removes circles in one platform-channel call.
+  Future<void> removeCircles(Iterable<CircleId> circleIds) async {
+    final Set<CircleId> values = circleIds.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateCircles(CircleUpdates._command(deletes: values));
+    for (final CircleId circleId in values) {
+      _commandCircles.remove(circleId);
+    }
+  }
+
+  /// Adds a ground overlay without rebuilding [HuaweiMap].
+  Future<void> addGroundOverlay(GroundOverlay groundOverlay) =>
+      addGroundOverlays(<GroundOverlay>[groundOverlay]);
+
+  /// Adds ground overlays in one platform-channel call.
+  Future<void> addGroundOverlays(
+    Iterable<GroundOverlay> groundOverlays,
+  ) async {
+    final Set<GroundOverlay> values = groundOverlays.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateGroundOverlays(
+      GroundOverlayUpdates._command(inserts: values),
+    );
+    for (final GroundOverlay groundOverlay in values) {
+      _commandGroundOverlays[groundOverlay.groundOverlayId] = groundOverlay;
+    }
+  }
+
+  /// Updates a ground overlay without rebuilding [HuaweiMap].
+  Future<void> updateGroundOverlay(GroundOverlay groundOverlay) =>
+      updateGroundOverlays(<GroundOverlay>[groundOverlay]);
+
+  /// Updates ground overlays in one platform-channel call.
+  Future<void> updateGroundOverlays(
+    Iterable<GroundOverlay> groundOverlays,
+  ) async {
+    final Set<GroundOverlay> values = groundOverlays.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateGroundOverlays(
+      GroundOverlayUpdates._command(updates: values),
+    );
+    for (final GroundOverlay groundOverlay in values) {
+      _commandGroundOverlays[groundOverlay.groundOverlayId] = groundOverlay;
+    }
+  }
+
+  /// Removes a ground overlay without rebuilding [HuaweiMap].
+  Future<void> removeGroundOverlay(GroundOverlayId groundOverlayId) =>
+      removeGroundOverlays(<GroundOverlayId>[groundOverlayId]);
+
+  /// Removes ground overlays in one platform-channel call.
+  Future<void> removeGroundOverlays(
+    Iterable<GroundOverlayId> groundOverlayIds,
+  ) async {
+    final Set<GroundOverlayId> values = groundOverlayIds.toSet();
+    if (values.isEmpty) {
+      return;
+    }
+    await _updateGroundOverlays(
+      GroundOverlayUpdates._command(deletes: values),
+    );
+    for (final GroundOverlayId groundOverlayId in values) {
+      _commandGroundOverlays.remove(groundOverlayId);
+    }
+  }
+
+  /// Adds a tile overlay without rebuilding [HuaweiMap].
+  Future<void> addTileOverlay(TileOverlay tileOverlay) =>
+      addTileOverlays(<TileOverlay>[tileOverlay]);
+
+  /// Adds tile overlays in one platform-channel call.
+  Future<void> addTileOverlays(Iterable<TileOverlay> tileOverlays) {
+    final Set<TileOverlay> values = tileOverlays.toSet();
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _updateTileOverlays(TileOverlayUpdates._command(inserts: values));
+  }
+
+  /// Updates a tile overlay without rebuilding [HuaweiMap].
+  Future<void> updateTileOverlay(TileOverlay tileOverlay) =>
+      updateTileOverlays(<TileOverlay>[tileOverlay]);
+
+  /// Updates tile overlays in one platform-channel call.
+  Future<void> updateTileOverlays(Iterable<TileOverlay> tileOverlays) {
+    final Set<TileOverlay> values = tileOverlays.toSet();
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _updateTileOverlays(TileOverlayUpdates._command(updates: values));
+  }
+
+  /// Removes a tile overlay without rebuilding [HuaweiMap].
+  Future<void> removeTileOverlay(TileOverlayId tileOverlayId) =>
+      removeTileOverlays(<TileOverlayId>[tileOverlayId]);
+
+  /// Removes tile overlays in one platform-channel call.
+  Future<void> removeTileOverlays(Iterable<TileOverlayId> tileOverlayIds) {
+    final Set<TileOverlayId> values = tileOverlayIds.toSet();
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _updateTileOverlays(TileOverlayUpdates._command(deletes: values));
+  }
+
+  /// Adds a heatmap without rebuilding [HuaweiMap].
+  Future<void> addHeatMap(HeatMap heatMap) => addHeatMaps(<HeatMap>[heatMap]);
+
+  /// Adds heatmaps in one platform-channel call.
+  Future<void> addHeatMaps(Iterable<HeatMap> heatMaps) {
+    final Set<HeatMap> values = heatMaps.toSet();
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _updateHeatMaps(HeatMapUpdates._command(inserts: values));
+  }
+
+  /// Updates a heatmap without rebuilding [HuaweiMap].
+  Future<void> updateHeatMap(HeatMap heatMap) =>
+      updateHeatMaps(<HeatMap>[heatMap]);
+
+  /// Updates heatmaps in one platform-channel call.
+  Future<void> updateHeatMaps(Iterable<HeatMap> heatMaps) {
+    final Set<HeatMap> values = heatMaps.toSet();
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _updateHeatMaps(HeatMapUpdates._command(updates: values));
+  }
+
+  /// Removes a heatmap without rebuilding [HuaweiMap].
+  Future<void> removeHeatMap(HeatMapId heatMapId) =>
+      removeHeatMaps(<HeatMapId>[heatMapId]);
+
+  /// Removes heatmaps in one platform-channel call.
+  Future<void> removeHeatMaps(Iterable<HeatMapId> heatMapIds) {
+    final Set<HeatMapId> values = heatMapIds.toSet();
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _updateHeatMaps(HeatMapUpdates._command(deletes: values));
   }
 
   /// Clears the cache of a tile overlay.

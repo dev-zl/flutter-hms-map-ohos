@@ -1,6 +1,9 @@
 ## 6.11.2+303
 
 - Dart improvements.
+- Added imperative single-object and batch add, update, and remove APIs for
+  markers, polylines, polygons, circles, ground overlays, tile overlays, and
+  heatmaps.
 
 ## 6.11.2+302
 
