@@ -174,7 +174,6 @@ class _TileOverlayDemoState extends State<TileOverlayDemo> {
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
             trafficEnabled: false,
-            tileOverlays: _tileOverlays,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

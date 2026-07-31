@@ -94,6 +94,7 @@ class _PolylineDemoState extends State<PolylineDemo> {
       _polylines.add(polyline0!);
       _polylines.add(polyline1!);
     });
+    mapController.addPolylines(_polylines);
   }
 
   void _changePattern() {
@@ -120,6 +121,7 @@ class _PolylineDemoState extends State<PolylineDemo> {
           _patternChanged = !_patternChanged;
         });
       }
+      mapController.updatePolyline(polyline0!);
     }
   }
 
@@ -146,10 +148,14 @@ class _PolylineDemoState extends State<PolylineDemo> {
           _patternChanged = !_patternChanged;
         });
       }
+      mapController.updatePolyline(polyline1!);
     }
   }
 
   void _clear() {
+    mapController.removePolylines(
+      _polylines.map((Polyline polyline) => polyline.polylineId),
+    );
     setState(() {
       _polylines.clear();
     });
@@ -173,7 +179,6 @@ class _PolylineDemoState extends State<PolylineDemo> {
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
             trafficEnabled: false,
-            polylines: _polylines,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

@@ -77,6 +77,9 @@ class _MarkerDemoState extends State<MarkerDemo> {
   }
 
   void _clear() {
+    mapController.removeMarkers(
+      _markers.map((Marker marker) => marker.markerId),
+    );
     setState(() {
       _markers.clear();
     });
@@ -123,6 +126,7 @@ class _MarkerDemoState extends State<MarkerDemo> {
           },
         );
       }
+      mapController.updateMarker(markerWithColor!);
     }
   }
 
@@ -209,6 +213,7 @@ class _MarkerDemoState extends State<MarkerDemo> {
       _markers.add(markerWithColor!);
       _markers.add(markerWithImage!);
     });
+    mapController.addMarkers(_markers);
   }
 
   void _addClusterMarkers() {
@@ -256,6 +261,9 @@ class _MarkerDemoState extends State<MarkerDemo> {
         ),
       );
     });
+    mapController.addMarkers(
+      _markers.where((Marker marker) => marker.markerId.id.startsWith('cluster')),
+    );
   }
 
   void startAnimation() {
@@ -302,7 +310,6 @@ class _MarkerDemoState extends State<MarkerDemo> {
             myLocationEnabled: true,
             trafficEnabled: false,
             markersClusteringEnabled: _markersClustering,
-            markers: _markers,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

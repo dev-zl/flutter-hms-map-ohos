@@ -52,102 +52,52 @@ class HuaweiMapController {
   void _connectStreams(int mapId) {
     _HuaweiMapMethodChannel.onMarkerClick(mapId: mapId).listen(
       (MarkerClickEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.onClick?.call();
-        } else {
-          _huaweiMapState.onMarkerClick(e.value!);
-        }
+        _commandMarkers[e.value]?.onClick?.call();
       },
     );
     _HuaweiMapMethodChannel.onMarkerDragEnd(mapId: mapId).listen(
       (MarkerDragEndEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.onDragEnd?.call(e.position);
-        } else {
-          _huaweiMapState.onMarkerDragEnd(e.value!, e.position);
-        }
+        _commandMarkers[e.value]?.onDragEnd?.call(e.position);
       },
     );
     _HuaweiMapMethodChannel.onMarkerDragStart(mapId: mapId).listen(
       (MarkerDragStartEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.onDragStart?.call(e.position);
-        } else {
-          _huaweiMapState.onMarkerDragStart(e.value!, e.position);
-        }
+        _commandMarkers[e.value]?.onDragStart?.call(e.position);
       },
     );
     _HuaweiMapMethodChannel.onMarkerDrag(mapId: mapId).listen(
       (MarkerDragEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.onDrag?.call(e.position);
-        } else {
-          _huaweiMapState.onMarkerDrag(e.value!, e.position);
-        }
+        _commandMarkers[e.value]?.onDrag?.call(e.position);
       },
     );
     _HuaweiMapMethodChannel.onInfoWindowClick(mapId: mapId).listen(
       (InfoWindowClickEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.infoWindow.onClick?.call();
-        } else {
-          _huaweiMapState.onInfoWindowClick(e.value!);
-        }
+        _commandMarkers[e.value]?.infoWindow.onClick?.call();
       },
     );
     _HuaweiMapMethodChannel.onInfoWindowLongClick(mapId: mapId).listen(
       (InfoWindowLongClickEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.infoWindow.onLongClick?.call();
-        } else {
-          _huaweiMapState.onInfoWindowLongClick(e.value!);
-        }
+        _commandMarkers[e.value]?.infoWindow.onLongClick?.call();
       },
     );
     _HuaweiMapMethodChannel.onInfoWindowClose(mapId: mapId).listen(
       (InfoWindowCloseEvent e) {
-        final Marker? marker = _commandMarkers[e.value];
-        if (marker != null) {
-          marker.infoWindow.onClose?.call();
-        } else {
-          _huaweiMapState.onInfoWindowClose(e.value!);
-        }
+        _commandMarkers[e.value]?.infoWindow.onClose?.call();
       },
     );
     _HuaweiMapMethodChannel.onPolylineClick(mapId: mapId).listen(
       (PolylineClickEvent e) {
-        final Polyline? polyline = _commandPolylines[e.value];
-        if (polyline != null) {
-          polyline.onClick?.call();
-        } else {
-          _huaweiMapState.onPolylineClick(e.value!);
-        }
+        _commandPolylines[e.value]?.onClick?.call();
       },
     );
     _HuaweiMapMethodChannel.onPolygonClick(mapId: mapId).listen(
       (PolygonClickEvent e) {
-        final Polygon? polygon = _commandPolygons[e.value];
-        if (polygon != null) {
-          polygon.onClick?.call();
-        } else {
-          _huaweiMapState.onPolygonClick(e.value!);
-        }
+        _commandPolygons[e.value]?.onClick?.call();
       },
     );
     _HuaweiMapMethodChannel.onCircleClick(mapId: mapId).listen(
       (CircleClickEvent e) {
-        final Circle? circle = _commandCircles[e.value];
-        if (circle != null) {
-          circle.onClick?.call();
-        } else {
-          _huaweiMapState.onCircleClick(e.value!);
-        }
+        _commandCircles[e.value]?.onClick?.call();
       },
     );
     _HuaweiMapMethodChannel.onClick(mapId: mapId)
@@ -167,12 +117,7 @@ class HuaweiMapController {
     );
     _HuaweiMapMethodChannel.onGroundOverlayClick(mapId: mapId).listen(
       (GroundOverlayClickEvent e) {
-        final GroundOverlay? overlay = _commandGroundOverlays[e.value];
-        if (overlay != null) {
-          overlay.onClick?.call();
-        } else {
-          _huaweiMapState.onGroundOverlayClick(e.value!);
-        }
+        _commandGroundOverlays[e.value]?.onClick?.call();
       },
     );
     if (_huaweiMapState.widget.onCameraMoveStarted != null) {
@@ -759,31 +704,6 @@ class HuaweiMap extends StatefulWidget {
   /// Padding on a map.
   final EdgeInsets padding;
 
-  /// Markers on a map.
-  ///
-  /// Marker icons are displayed at specified positions on the map.
-  final Set<Marker> markers;
-
-  /// Polygons on a map.
-  final Set<Polygon> polygons;
-
-  /// Polylines on a map.
-  final Set<Polyline> polylines;
-
-  /// Circles on a map.
-  ///
-  /// The longitude and latitude of the center and the radius are specified for the circle to indicate the surrounding area of a location.
-  final Set<Circle> circles;
-
-  /// Images on a map.
-  final Set<GroundOverlay> groundOverlays;
-
-  /// Tile overlays to a map.
-  final Set<TileOverlay> tileOverlays;
-
-  /// Heatmaps on a map.
-  final Set<HeatMap> heatMaps;
-
   /// Indicates whether the my-location layer is enabled.
   ///
   /// If the my-location layer is enabled and the location is available, the layer constantly draws the user's current location and bearing and displays the UI controls for the user to interact with their location.
@@ -904,13 +824,6 @@ class HuaweiMap extends StatefulWidget {
     this.isScrollGesturesEnabledDuringRotateOrZoom = true,
     this.gestureScaleByMapCenter = false,
     this.pointToCenter,
-    this.markers = const <Marker>{},
-    this.polygons = const <Polygon>{},
-    this.polylines = const <Polyline>{},
-    this.circles = const <Circle>{},
-    this.groundOverlays = const <GroundOverlay>{},
-    this.tileOverlays = const <TileOverlay>{},
-    this.heatMaps = const <HeatMap>{},
     this.onMapCreated,
     this.onCameraMoveStarted,
     this.onCameraMove,
@@ -939,19 +852,6 @@ class HuaweiMap extends StatefulWidget {
 }
 
 class _HuaweiMapState extends State<HuaweiMap> {
-  Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
-  Map<PolylineId, Polyline> _polylines = <PolylineId, Polyline>{};
-  Map<PolygonId, Polygon> _polygons = <PolygonId, Polygon>{};
-  Map<CircleId, Circle> _circles = <CircleId, Circle>{};
-
-  Map<GroundOverlayId, GroundOverlay> _groundOverlays =
-      <GroundOverlayId, GroundOverlay>{};
-
-  Map<TileOverlayId, TileOverlay> _tileOverlays =
-      <TileOverlayId, TileOverlay>{};
-
-  Map<HeatMapId, HeatMap> _heatMaps = <HeatMapId, HeatMap>{};
-
   late HuaweiMapOptions _huaweiMapOptions;
 
   final Completer<HuaweiMapController> _controller =
@@ -961,13 +861,6 @@ class _HuaweiMapState extends State<HuaweiMap> {
   void initState() {
     super.initState();
     _huaweiMapOptions = HuaweiMapOptions.fromWidget(widget);
-    _markers = markerToMap(widget.markers);
-    _polylines = polylineToMap(widget.polylines);
-    _polygons = polygonToMap(widget.polygons);
-    _circles = circleToMap(widget.circles);
-    _groundOverlays = groundOverlayToMap(widget.groundOverlays);
-    _tileOverlays = tileOverlayToMap(widget.tileOverlays);
-    _heatMaps = heatMapToMap(widget.heatMaps);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
@@ -1001,75 +894,6 @@ class _HuaweiMapState extends State<HuaweiMap> {
   void didUpdateWidget(HuaweiMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateOptions();
-    _updateMarkers();
-    _updatePolylines();
-    _updatePolygons();
-    _updateCircles();
-    _updateGroundOverlays();
-    _updateTileOverlays();
-    _updateHeatMaps();
-  }
-
-  void _updateMarkers() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updateMarkers(
-      MarkerUpdates.update(_markers.values.toSet(), widget.markers),
-    );
-    _markers = markerToMap(widget.markers);
-  }
-
-  void _updatePolylines() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updatePolylines(
-      PolylineUpdates.update(_polylines.values.toSet(), widget.polylines),
-    );
-    _polylines = polylineToMap(widget.polylines);
-  }
-
-  void _updatePolygons() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updatePolygons(
-      PolygonUpdates.update(_polygons.values.toSet(), widget.polygons),
-    );
-    _polygons = polygonToMap(widget.polygons);
-  }
-
-  void _updateCircles() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updateCircles(
-      CircleUpdates.update(_circles.values.toSet(), widget.circles),
-    );
-    _circles = circleToMap(widget.circles);
-  }
-
-  void _updateGroundOverlays() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updateGroundOverlays(
-      GroundOverlayUpdates.update(
-        _groundOverlays.values.toSet(),
-        widget.groundOverlays,
-      ),
-    );
-    _groundOverlays = groundOverlayToMap(widget.groundOverlays);
-  }
-
-  void _updateTileOverlays() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updateTileOverlays(
-      TileOverlayUpdates.update(
-        _tileOverlays.values.toSet(),
-        widget.tileOverlays,
-      ),
-    );
-    _tileOverlays = tileOverlayToMap(widget.tileOverlays);
-  }
-
-  void _updateHeatMaps() async {
-    final HuaweiMapController controller = await _controller.future;
-    controller._updateHeatMaps(
-      HeatMapUpdates.update(_heatMaps.values.toSet(), widget.heatMaps),
-    );
-    _heatMaps = heatMapToMap(widget.heatMaps);
   }
 
   void onClick(LatLng position) {
@@ -1092,67 +916,15 @@ class _HuaweiMapState extends State<HuaweiMap> {
     widget.onMyLocationButtonClick?.call(onMyLocationButtonClicked);
   }
 
-  void onMarkerClick(MarkerId markerId) {
-    _markers[markerId]?.onClick?.call();
-  }
-
-  void onMarkerDragEnd(MarkerId markerId, LatLng position) {
-    _markers[markerId]?.onDragEnd?.call(position);
-  }
-
-  void onMarkerDragStart(MarkerId markerId, LatLng position) {
-    _markers[markerId]?.onDragStart?.call(position);
-  }
-
-  void onMarkerDrag(MarkerId markerId, LatLng position) {
-    _markers[markerId]?.onDrag?.call(position);
-  }
-
-  void onPolygonClick(PolygonId polygonId) {
-    _polygons[polygonId]?.onClick?.call();
-  }
-
-  void onPolylineClick(PolylineId polylineId) {
-    _polylines[polylineId]?.onClick?.call();
-  }
-
-  void onCircleClick(CircleId circleId) {
-    _circles[circleId]!.onClick!();
-  }
-
-  void onInfoWindowClick(MarkerId markerId) {
-    _markers[markerId]?.infoWindow.onClick?.call();
-  }
-
-  void onInfoWindowLongClick(MarkerId markerId) {
-    _markers[markerId]?.infoWindow.onLongClick?.call();
-  }
-
-  void onInfoWindowClose(MarkerId markerId) {
-    _markers[markerId]?.infoWindow.onClose?.call();
-  }
-
-  void onGroundOverlayClick(GroundOverlayId groundOverlayId) {
-    _groundOverlays[groundOverlayId]?.onClick?.call();
-  }
-
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> creationParams = <String, dynamic>{
       _Param.initialCameraPosition: widget.initialCameraPosition.toMap(),
       _Param.options: _huaweiMapOptions.toMap(),
-      _Param.markersToInsert: markerToList(widget.markers),
-      _Param.polylinesToInsert: polylineToList(widget.polylines),
-      _Param.polygonsToInsert: polygonToList(widget.polygons),
-      _Param.circlesToInsert: circleToList(widget.circles),
-      _Param.groundOverlaysToInsert: groundOverlayToList(widget.groundOverlays),
-      _Param.tileOverlaysToInsert: tileOverlayToList(widget.tileOverlays),
-      _Param.heatMapsToInsert: heatMapToList(widget.heatMaps),
     };
     debugPrint(
-      'HuaweiMap init: build widget initialCamera=${widget.initialCameraPosition.toMap()} '
-      'markers=${widget.markers.length} polylines=${widget.polylines.length} '
-      'polygons=${widget.polygons.length} circles=${widget.circles.length}',
+      'HuaweiMap init: build widget '
+      'initialCamera=${widget.initialCameraPosition.toMap()}',
     );
     return _HuaweiMapMethodChannel.buildView(
       creationParams,

@@ -140,7 +140,6 @@ class _PolygonDemoState extends State<PolygonDemo> {
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
             trafficEnabled: false,
-            polygons: _polygons,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

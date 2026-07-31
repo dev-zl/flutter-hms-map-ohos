@@ -172,7 +172,6 @@ class _GroundOverlayDemoState extends State<GroundOverlayDemo> {
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
             trafficEnabled: false,
-            groundOverlays: _groundOverlays,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

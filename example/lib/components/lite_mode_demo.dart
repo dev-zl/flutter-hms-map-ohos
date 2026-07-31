@@ -157,8 +157,10 @@ class LiteModeDemo extends StatelessWidget {
                                 target: _center,
                                 zoom: _zoom,
                               ),
-                              markers: markers,
-                              circles: circles,
+                              onMapCreated: (HuaweiMapController controller) {
+                                controller.addMarkers(markers);
+                                controller.addCircles(circles);
+                              },
                               logoPadding: const EdgeInsets.all(8.0),
                             ),
                           ),

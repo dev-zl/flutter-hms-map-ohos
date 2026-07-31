@@ -216,7 +216,6 @@ class _CircleDemoState extends State<CircleDemo> {
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
             trafficEnabled: false,
-            circles: _circles,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

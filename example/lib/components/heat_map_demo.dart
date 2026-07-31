@@ -134,7 +134,6 @@ class _HeatMapDemoState extends State<HeatMapDemo> {
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
             trafficEnabled: false,
-            heatMaps: _heatMaps,
             logoPosition: HuaweiMap.LOWER_LEFT,
             logoPadding: const EdgeInsets.only(
               left: 15,

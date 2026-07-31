@@ -78,8 +78,53 @@ class _HarmonyOSMapDemoState extends State<HarmonyOSMapDemo> {
                 target: LatLng(39.9042, 116.4074),
                 zoom: 12.0,
               ),
-              onMapCreated: (HuaweiMapController controller) {
+              onMapCreated: (HuaweiMapController controller) async {
                 _controller = controller;
+                await controller.addMarker(
+                  Marker(
+                    markerId: MarkerId('beijing'),
+                    position: LatLng(39.9042, 116.4074),
+                    infoWindow: InfoWindow(
+                      title: '北京',
+                      snippet: '中国首都',
+                    ),
+                  ),
+                );
+                await controller.addPolygon(
+                  Polygon(
+                    polygonId: PolygonId('test_polygon'),
+                    points: [
+                      LatLng(39.9, 116.4),
+                      LatLng(39.9, 116.5),
+                      LatLng(39.8, 116.5),
+                      LatLng(39.8, 116.4),
+                    ],
+                    strokeWidth: 2,
+                    strokeColor: Colors.red,
+                    fillColor: Colors.red.withOpacity(0.3),
+                  ),
+                );
+                await controller.addPolyline(
+                  Polyline(
+                    polylineId: PolylineId('test_polyline'),
+                    points: [
+                      LatLng(39.9042, 116.4074),
+                      LatLng(39.8042, 116.3074),
+                    ],
+                    width: 5,
+                    color: Colors.blue,
+                  ),
+                );
+                await controller.addCircle(
+                  Circle(
+                    circleId: CircleId('test_circle'),
+                    center: LatLng(39.9042, 116.4074),
+                    radius: 1000,
+                    fillColor: Colors.green.withOpacity(0.3),
+                    strokeColor: Colors.green,
+                    strokeWidth: 2,
+                  ),
+                );
                 setState(() {
                   _mapInfo = '地图已创建 - 平台：${PlatformDetector.currentPlatform}';
                 });
@@ -89,51 +134,6 @@ class _HarmonyOSMapDemoState extends State<HarmonyOSMapDemo> {
               myLocationButtonEnabled: false,
               zoomControlsEnabled: true,
               compassEnabled: true,
-              markers: {
-                Marker(
-                  markerId: MarkerId('beijing'),
-                  position: LatLng(39.9042, 116.4074),
-                  infoWindow: InfoWindow(
-                    title: '北京',
-                    snippet: '中国首都',
-                  ),
-                ),
-              },
-              polygons: {
-                Polygon(
-                  polygonId: PolygonId('test_polygon'),
-                  points: [
-                    LatLng(39.9, 116.4),
-                    LatLng(39.9, 116.5),
-                    LatLng(39.8, 116.5),
-                    LatLng(39.8, 116.4),
-                  ],
-                  strokeWidth: 2,
-                  strokeColor: Colors.red,
-                  fillColor: Colors.red.withOpacity(0.3),
-                ),
-              },
-              polylines: {
-                Polyline(
-                  polylineId: PolylineId('test_polyline'),
-                  points: [
-                    LatLng(39.9042, 116.4074),
-                    LatLng(39.8042, 116.3074),
-                  ],
-                  width: 5,
-                  color: Colors.blue,
-                ),
-              },
-              circles: {
-                Circle(
-                  circleId: CircleId('test_circle'),
-                  center: LatLng(39.9042, 116.4074),
-                  radius: 1000,
-                  fillColor: Colors.green.withOpacity(0.3),
-                  strokeColor: Colors.green,
-                  strokeWidth: 2,
-                ),
-              },
               onCameraMoveStarted: (int? i) {
                 print('相机开始移动');
               },
