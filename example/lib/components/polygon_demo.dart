@@ -86,6 +86,7 @@ class _PolygonDemoState extends State<PolygonDemo> {
       _polygons.add(polygon0!);
       _polygons.add(polygon1!);
     });
+    mapController.addPolygons(_polygons);
   }
 
   void _changeZIndex() {
@@ -113,10 +114,14 @@ class _PolygonDemoState extends State<PolygonDemo> {
           },
         );
       }
+      mapController.updatePolygon(polygon1!);
     }
   }
 
   void _clear() {
+    mapController.removePolygons(
+      _polygons.map((Polygon polygon) => polygon.polygonId),
+    );
     setState(() {
       _polygons.clear();
     });

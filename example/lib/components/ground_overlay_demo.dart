@@ -83,6 +83,7 @@ class _GroundOverlayDemoState extends State<GroundOverlayDemo> {
       _groundOverlays.add(groundOverlay0!);
       _groundOverlays.add(groundOverlay1!);
     });
+    mapController.addGroundOverlays(_groundOverlays);
   }
 
   void _changeTransparency() {
@@ -106,6 +107,7 @@ class _GroundOverlayDemoState extends State<GroundOverlayDemo> {
           },
         );
       }
+      mapController.updateGroundOverlay(groundOverlay0!);
     }
   }
 
@@ -132,10 +134,16 @@ class _GroundOverlayDemoState extends State<GroundOverlayDemo> {
           },
         );
       }
+      mapController.updateGroundOverlay(groundOverlay1!);
     }
   }
 
   void _clear() {
+    mapController.removeGroundOverlays(
+      _groundOverlays.map(
+        (GroundOverlay overlay) => overlay.groundOverlayId,
+      ),
+    );
     setState(() {
       _groundOverlays.clear();
     });

@@ -67,8 +67,8 @@ await controller.removeMarker(marker.markerId);
 Single-object and batch APIs are available for `Marker`, `Polyline`, `Polygon`,
 `Circle`, `GroundOverlay`, `TileOverlay`, and `HeatMap`. For example,
 `addMarkers`, `updateMarkers`, and `removeMarkers` send the whole batch in one
-platform-channel call. Do not manage the same overlay ID through both a
-`HuaweiMap` set property and the controller API.
+platform-channel call. These overlays are managed exclusively through
+`HuaweiMapController`; `HuaweiMap` no longer accepts overlay set properties.
 
 ## Questions or Issues
 

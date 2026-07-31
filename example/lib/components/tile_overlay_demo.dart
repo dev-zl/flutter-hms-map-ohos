@@ -114,6 +114,7 @@ class _TileOverlayDemoState extends State<TileOverlayDemo> {
       _tileOverlays.add(repetitiveTileOverlay!);
       _tileOverlays.add(urlTileOverlay!);
     });
+    mapController.addTileOverlays(_tileOverlays);
   }
 
   void _clearTileCaches() {
@@ -121,6 +122,7 @@ class _TileOverlayDemoState extends State<TileOverlayDemo> {
       for (int i = 0; i <= _tileOverlays.length - 1; i++) {
         mapController.clearTileCache(_tileOverlays.elementAt(i));
       }
+      mapController.updateTileOverlay(tileOverlay!);
     }
   }
 
@@ -149,6 +151,9 @@ class _TileOverlayDemoState extends State<TileOverlayDemo> {
   }
 
   void _clear() {
+    mapController.removeTileOverlays(
+      _tileOverlays.map((TileOverlay overlay) => overlay.tileOverlayId),
+    );
     setState(() {
       _tileOverlays.clear();
     });

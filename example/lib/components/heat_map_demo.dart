@@ -75,6 +75,7 @@ class _HeatMapDemoState extends State<HeatMapDemo> {
     setState(() {
       _heatMaps.add(heatMap0!);
     });
+    mapController.addHeatMaps(_heatMaps);
   }
 
   void _changeOpacity() {
@@ -105,10 +106,14 @@ class _HeatMapDemoState extends State<HeatMapDemo> {
           _opacityChanged = !_opacityChanged;
         });
       }
+      mapController.updateHeatMap(heatMap0!);
     }
   }
 
   void _clear() {
+    mapController.removeHeatMaps(
+      _heatMaps.map((HeatMap heatMap) => heatMap.heatMapId),
+    );
     setState(() {
       _heatMaps.clear();
     });

@@ -4,6 +4,8 @@
 - Added imperative single-object and batch add, update, and remove APIs for
   markers, polylines, polygons, circles, ground overlays, tile overlays, and
   heatmaps.
+- **Breaking Change:** Removed the seven declarative overlay set properties
+  from `HuaweiMap`. Manage overlays exclusively through `HuaweiMapController`.
 
 ## 6.11.2+302
 

@@ -58,6 +58,9 @@ class _CircleDemoState extends State<CircleDemo> {
   }
 
   void _clear() {
+    mapController.removeCircles(
+      _circles.map((Circle circle) => circle.circleId),
+    );
     setState(() {
       _circles.clear();
     });
@@ -88,6 +91,7 @@ class _CircleDemoState extends State<CircleDemo> {
           },
         );
       }
+      mapController.updateCircle(circle0!);
     }
   }
 
@@ -112,6 +116,7 @@ class _CircleDemoState extends State<CircleDemo> {
           },
         );
       }
+      mapController.updateCircle(circle0!);
     }
   }
 
@@ -138,6 +143,7 @@ class _CircleDemoState extends State<CircleDemo> {
           _strokeChanged = !_strokeChanged;
         });
       }
+      mapController.updateCircle(circle1!);
     }
   }
 
@@ -190,6 +196,7 @@ class _CircleDemoState extends State<CircleDemo> {
       _circles.add(circle1!);
       _circles.add(circle2!);
     });
+    mapController.addCircles(_circles);
   }
 
   void startAnimation() {
