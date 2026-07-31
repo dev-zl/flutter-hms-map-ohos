@@ -16,17 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<CircleId, Circle> circleToMap(Iterable<Circle> circles) {
-  return Map<CircleId, Circle>.fromEntries(
-    circles.map((Circle circle) {
-      return MapEntry<CircleId, Circle>(
-        circle.circleId,
-        circle.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> circleToList(Set<Circle> circles) {
   return circles.map<Map<String, dynamic>>((Circle c) {
     return circleToJson(c);

@@ -17,74 +17,15 @@
 part of '../../huawei_map_ohos.dart';
 
 class GroundOverlayUpdates {
-  late Set<GroundOverlay> insertSet;
-  late Set<GroundOverlayId> deleteSet;
-  late Set<GroundOverlay> updateSet;
+  final Set<GroundOverlay> insertSet;
+  final Set<GroundOverlayId> deleteSet;
+  final Set<GroundOverlay> updateSet;
 
   GroundOverlayUpdates._command({
     Set<GroundOverlay> inserts = const <GroundOverlay>{},
     Set<GroundOverlayId> deletes = const <GroundOverlayId>{},
     Set<GroundOverlay> updates = const <GroundOverlay>{},
-  }) {
-    insertSet = inserts;
-    deleteSet = deletes;
-    updateSet = updates;
-  }
-
-  GroundOverlayUpdates.update(
-    Set<GroundOverlay> previous,
-    Set<GroundOverlay> current,
-  ) {
-    final Map<GroundOverlayId, GroundOverlay> oldGroundOverlays =
-        groundOverlayToMap(previous);
-    final Map<GroundOverlayId, GroundOverlay> currGroundOverlays =
-        groundOverlayToMap(current);
-
-    final Set<GroundOverlayId> oldIds = oldGroundOverlays.keys.toSet();
-    final Set<GroundOverlayId> currIds = currGroundOverlays.keys.toSet();
-
-    final Set<GroundOverlayId> toDelete = oldIds.difference(currIds);
-    final Set<GroundOverlay> toInsert = Set<GroundOverlay>.from(
-      currIds
-          .difference(oldIds)
-          .map((GroundOverlayId id) => currGroundOverlays[id])
-          .toSet(),
-    );
-    final Set<GroundOverlay> toUpdate = Set<GroundOverlay>.from(
-      currIds
-          .intersection(oldIds)
-          .map((GroundOverlayId id) => currGroundOverlays[id])
-          .where((GroundOverlay? x) => isChanged(x!, oldGroundOverlays))
-          .toSet(),
-    );
-
-    insertSet = toInsert;
-    deleteSet = toDelete;
-    updateSet = toUpdate;
-  }
-
-  bool isChanged(
-    GroundOverlay curr,
-    Map<GroundOverlayId, GroundOverlay> oldGroundOverlays,
-  ) {
-    final GroundOverlay old = oldGroundOverlays[curr.groundOverlayId]!;
-    return curr != old;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
-    return other is GroundOverlayUpdates &&
-        setEquals(insertSet, other.insertSet) &&
-        setEquals(deleteSet, other.deleteSet) &&
-        setEquals(updateSet, other.updateSet);
-  }
-
-  @override
-  int get hashCode => Object.hash(insertSet, deleteSet, updateSet);
+  })  : insertSet = inserts,
+        deleteSet = deletes,
+        updateSet = updates;
 }

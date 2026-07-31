@@ -17,69 +17,15 @@
 part of '../../huawei_map_ohos.dart';
 
 class PolylineUpdates {
-  late Set<Polyline> insertSet;
-  late Set<PolylineId> deleteSet;
-  late Set<Polyline> updateSet;
+  final Set<Polyline> insertSet;
+  final Set<PolylineId> deleteSet;
+  final Set<Polyline> updateSet;
 
   PolylineUpdates._command({
     Set<Polyline> inserts = const <Polyline>{},
     Set<PolylineId> deletes = const <PolylineId>{},
     Set<Polyline> updates = const <Polyline>{},
-  }) {
-    insertSet = inserts;
-    deleteSet = deletes;
-    updateSet = updates;
-  }
-
-  bool isChanged(
-    Polyline current,
-    Map<PolylineId, Polyline> previousPolylines,
-  ) {
-    final Polyline old = previousPolylines[current.polylineId]!;
-    return current != old;
-  }
-
-  PolylineUpdates.update(Set<Polyline> previous, Set<Polyline> current) {
-    final Map<PolylineId, Polyline> oldPolylines = polylineToMap(previous);
-    final Map<PolylineId, Polyline> currPolylines = polylineToMap(current);
-
-    final Set<PolylineId> oldIds = oldPolylines.keys.toSet();
-    final Set<PolylineId> currIds = currPolylines.keys.toSet();
-
-    final Set<PolylineId> toDelete = oldIds.difference(currIds);
-    final Set<Polyline> toInsert = Set<Polyline>.from(
-      currIds
-          .difference(oldIds)
-          .map((PolylineId id) => currPolylines[id])
-          .toSet(),
-    );
-    final Set<Polyline> toUpdate = Set<Polyline>.from(
-      currIds
-          .intersection(oldIds)
-          .map((PolylineId id) => currPolylines[id])
-          .where((Polyline? x) => isChanged(x!, oldPolylines))
-          .toSet(),
-    );
-
-    insertSet = toInsert;
-    deleteSet = toDelete;
-    updateSet = toUpdate;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
-    return other is PolylineUpdates &&
-        setEquals(insertSet, other.insertSet) &&
-        setEquals(deleteSet, other.deleteSet) &&
-        setEquals(updateSet, other.updateSet);
-  }
-
-  @override
-  int get hashCode => Object.hash(insertSet, deleteSet, updateSet);
+  })  : insertSet = inserts,
+        deleteSet = deletes,
+        updateSet = updates;
 }

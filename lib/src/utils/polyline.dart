@@ -16,17 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<PolylineId, Polyline> polylineToMap(Iterable<Polyline> polylines) {
-  return Map<PolylineId, Polyline>.fromEntries(
-    polylines.map((Polyline polyline) {
-      return MapEntry<PolylineId, Polyline>(
-        polyline.polylineId,
-        polyline.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> polylineToList(Set<Polyline> polylines) {
   return polylines.map<Map<String, dynamic>>((Polyline p) {
     return polylineToJson(p);

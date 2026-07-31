@@ -17,66 +17,15 @@
 part of '../../huawei_map_ohos.dart';
 
 class PolygonUpdates {
-  late Set<Polygon> insertSet;
-  late Set<PolygonId> deleteSet;
-  late Set<Polygon> updateSet;
+  final Set<Polygon> insertSet;
+  final Set<PolygonId> deleteSet;
+  final Set<Polygon> updateSet;
 
   PolygonUpdates._command({
     Set<Polygon> inserts = const <Polygon>{},
     Set<PolygonId> deletes = const <PolygonId>{},
     Set<Polygon> updates = const <Polygon>{},
-  }) {
-    insertSet = inserts;
-    deleteSet = deletes;
-    updateSet = updates;
-  }
-
-  PolygonUpdates.update(Set<Polygon> previous, Set<Polygon> current) {
-    final Map<PolygonId, Polygon> oldPolygons = polygonToMap(previous);
-    final Map<PolygonId, Polygon> currPolygons = polygonToMap(current);
-
-    final Set<PolygonId> oldIds = oldPolygons.keys.toSet();
-    final Set<PolygonId> currIds = currPolygons.keys.toSet();
-
-    final Set<PolygonId> toDelete = oldIds.difference(currIds);
-    final Set<Polygon> toInsert = Set<Polygon>.from(
-      currIds
-          .difference(oldIds)
-          .map((PolygonId id) => currPolygons[id])
-          .toSet(),
-    );
-    final Set<Polygon> toUpdate = Set<Polygon>.from(
-      currIds
-          .intersection(oldIds)
-          .map((PolygonId id) => currPolygons[id])
-          .where((Polygon? x) => isChanged(x!, oldPolygons))
-          .toSet(),
-    );
-
-    insertSet = toInsert;
-    deleteSet = toDelete;
-    updateSet = toUpdate;
-  }
-
-  bool isChanged(Polygon current, Map<PolygonId, Polygon> oldPolygons) {
-    final Polygon old = oldPolygons[current.polygonId]!;
-    return current != old;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
-    return other is PolygonUpdates &&
-        setEquals(insertSet, other.insertSet) &&
-        setEquals(deleteSet, other.deleteSet) &&
-        setEquals(updateSet, other.updateSet);
-  }
-
-  @override
-  int get hashCode => Object.hash(insertSet, deleteSet, updateSet);
+  })  : insertSet = inserts,
+        deleteSet = deletes,
+        updateSet = updates;
 }

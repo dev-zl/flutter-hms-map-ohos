@@ -16,17 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<PolygonId, Polygon> polygonToMap(Iterable<Polygon> polygons) {
-  return Map<PolygonId, Polygon>.fromEntries(
-    polygons.map((Polygon polygon) {
-      return MapEntry<PolygonId, Polygon>(
-        polygon.polygonId,
-        polygon.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> polygonToList(Set<Polygon> polygons) {
   return polygons.map<Map<String, dynamic>>((Polygon p) {
     return polygonToJson(p);

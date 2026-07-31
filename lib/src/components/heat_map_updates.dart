@@ -17,66 +17,15 @@
 part of '../../huawei_map_ohos.dart';
 
 class HeatMapUpdates {
-  late Set<HeatMap> insertSet;
-  late Set<HeatMapId> deleteSet;
-  late Set<HeatMap> updateSet;
+  final Set<HeatMap> insertSet;
+  final Set<HeatMapId> deleteSet;
+  final Set<HeatMap> updateSet;
 
   HeatMapUpdates._command({
     Set<HeatMap> inserts = const <HeatMap>{},
     Set<HeatMapId> deletes = const <HeatMapId>{},
     Set<HeatMap> updates = const <HeatMap>{},
-  }) {
-    insertSet = inserts;
-    deleteSet = deletes;
-    updateSet = updates;
-  }
-
-  HeatMapUpdates.update(Set<HeatMap> previous, Set<HeatMap> current) {
-    final Map<HeatMapId, HeatMap> oldHeatMaps = heatMapToMap(previous);
-    final Map<HeatMapId, HeatMap> currHeatMaps = heatMapToMap(current);
-
-    final Set<HeatMapId> oldIds = oldHeatMaps.keys.toSet();
-    final Set<HeatMapId> currIds = currHeatMaps.keys.toSet();
-
-    final Set<HeatMapId> toDelete = oldIds.difference(currIds);
-    final Set<HeatMap> toInsert = Set<HeatMap>.from(
-      currIds
-          .difference(oldIds)
-          .map((HeatMapId id) => currHeatMaps[id])
-          .toSet(),
-    );
-    final Set<HeatMap> toUpdate = Set<HeatMap>.from(
-      currIds
-          .intersection(oldIds)
-          .map((HeatMapId id) => currHeatMaps[id])
-          .where((HeatMap? x) => isChanged(x!, oldHeatMaps))
-          .toSet(),
-    );
-
-    insertSet = toInsert;
-    deleteSet = toDelete;
-    updateSet = toUpdate;
-  }
-
-  bool isChanged(HeatMap curr, Map<HeatMapId, HeatMap> oldHeatMaps) {
-    final HeatMap old = oldHeatMaps[curr.heatMapId]!;
-    return curr != old;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
-    return other is MarkerUpdates &&
-        setEquals(insertSet, other.insertSet) &&
-        setEquals(deleteSet, other.deleteSet) &&
-        setEquals(updateSet, other.updateSet);
-  }
-
-  @override
-  int get hashCode => Object.hash(insertSet, deleteSet, updateSet);
+  })  : insertSet = inserts,
+        deleteSet = deletes,
+        updateSet = updates;
 }

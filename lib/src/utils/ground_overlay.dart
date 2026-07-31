@@ -16,19 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<GroundOverlayId, GroundOverlay> groundOverlayToMap(
-  Iterable<GroundOverlay> groundOverlays,
-) {
-  return Map<GroundOverlayId, GroundOverlay>.fromEntries(
-    groundOverlays.map((GroundOverlay groundOverlay) {
-      return MapEntry<GroundOverlayId, GroundOverlay>(
-        groundOverlay.groundOverlayId,
-        groundOverlay.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> groundOverlayToList(
   Set<GroundOverlay> groundOverlays,
 ) {

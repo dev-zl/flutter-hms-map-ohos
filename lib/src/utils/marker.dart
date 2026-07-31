@@ -16,17 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<MarkerId, Marker> markerToMap(Iterable<Marker> markers) {
-  return Map<MarkerId, Marker>.fromEntries(
-    markers.map((Marker marker) {
-      return MapEntry<MarkerId, Marker>(
-        marker.markerId,
-        marker.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> markerToList(Set<Marker> markers) {
   return markers.map<Map<String, dynamic>>((Marker m) {
     return markerToJson(m);

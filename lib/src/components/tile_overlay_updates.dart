@@ -17,74 +17,15 @@
 part of '../../huawei_map_ohos.dart';
 
 class TileOverlayUpdates {
-  late Set<TileOverlay> insertSet;
-  late Set<TileOverlayId> deleteSet;
-  late Set<TileOverlay> updateSet;
+  final Set<TileOverlay> insertSet;
+  final Set<TileOverlayId> deleteSet;
+  final Set<TileOverlay> updateSet;
 
   TileOverlayUpdates._command({
     Set<TileOverlay> inserts = const <TileOverlay>{},
     Set<TileOverlayId> deletes = const <TileOverlayId>{},
     Set<TileOverlay> updates = const <TileOverlay>{},
-  }) {
-    insertSet = inserts;
-    deleteSet = deletes;
-    updateSet = updates;
-  }
-
-  TileOverlayUpdates.update(
-    Set<TileOverlay> previous,
-    Set<TileOverlay> current,
-  ) {
-    final Map<TileOverlayId, TileOverlay> oldTileOverlays =
-        tileOverlayToMap(previous);
-    final Map<TileOverlayId, TileOverlay> currTileOverlays =
-        tileOverlayToMap(current);
-
-    final Set<TileOverlayId> oldIds = oldTileOverlays.keys.toSet();
-    final Set<TileOverlayId> currIds = currTileOverlays.keys.toSet();
-
-    final Set<TileOverlayId> toDelete = oldIds.difference(currIds);
-    final Set<TileOverlay> toInsert = Set<TileOverlay>.from(
-      currIds
-          .difference(oldIds)
-          .map((TileOverlayId id) => currTileOverlays[id])
-          .toSet(),
-    );
-    final Set<TileOverlay> toUpdate = Set<TileOverlay>.from(
-      currIds
-          .intersection(oldIds)
-          .map((TileOverlayId id) => currTileOverlays[id])
-          .where((TileOverlay? x) => isChanged(x!, oldTileOverlays))
-          .toSet(),
-    );
-
-    insertSet = toInsert;
-    deleteSet = toDelete;
-    updateSet = toUpdate;
-  }
-
-  bool isChanged(
-    TileOverlay curr,
-    Map<TileOverlayId, TileOverlay> oldTileOverlays,
-  ) {
-    final TileOverlay old = oldTileOverlays[curr.tileOverlayId]!;
-    return curr != old;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
-    return other is TileOverlayUpdates &&
-        setEquals(insertSet, other.insertSet) &&
-        setEquals(deleteSet, other.deleteSet) &&
-        setEquals(updateSet, other.updateSet);
-  }
-
-  @override
-  int get hashCode => Object.hash(insertSet, deleteSet, updateSet);
+  })  : insertSet = inserts,
+        deleteSet = deletes,
+        updateSet = updates;
 }

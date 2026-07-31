@@ -16,17 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<HeatMapId, HeatMap> heatMapToMap(Iterable<HeatMap> heatMaps) {
-  return Map<HeatMapId, HeatMap>.fromEntries(
-    heatMaps.map((HeatMap heatMap) {
-      return MapEntry<HeatMapId, HeatMap>(
-        heatMap.heatMapId,
-        heatMap.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> heatMapToList(Set<HeatMap> heatMaps) {
   return heatMaps.map<Map<String, dynamic>>((HeatMap hm) {
     return heatMapToJson(hm);

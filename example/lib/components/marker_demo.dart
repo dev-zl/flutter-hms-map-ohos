@@ -262,7 +262,8 @@ class _MarkerDemoState extends State<MarkerDemo> {
       );
     });
     mapController.addMarkers(
-      _markers.where((Marker marker) => marker.markerId.id.startsWith('cluster')),
+      _markers
+          .where((Marker marker) => marker.markerId.id.startsWith('cluster')),
     );
   }
 

@@ -17,63 +17,15 @@
 part of '../../huawei_map_ohos.dart';
 
 class MarkerUpdates {
-  late Set<Marker> insertSet;
-  late Set<MarkerId> deleteSet;
-  late Set<Marker> updateSet;
+  final Set<Marker> insertSet;
+  final Set<MarkerId> deleteSet;
+  final Set<Marker> updateSet;
 
   MarkerUpdates._command({
     Set<Marker> inserts = const <Marker>{},
     Set<MarkerId> deletes = const <MarkerId>{},
     Set<Marker> updates = const <Marker>{},
-  }) {
-    insertSet = inserts;
-    deleteSet = deletes;
-    updateSet = updates;
-  }
-
-  MarkerUpdates.update(Set<Marker> previous, Set<Marker> current) {
-    final Map<MarkerId, Marker> oldMarkers = markerToMap(previous);
-    final Map<MarkerId, Marker> currMarkers = markerToMap(current);
-
-    final Set<MarkerId> oldIds = oldMarkers.keys.toSet();
-    final Set<MarkerId> currIds = currMarkers.keys.toSet();
-
-    final Set<MarkerId> toDelete = oldIds.difference(currIds);
-    final Set<Marker> toInsert = Set<Marker>.from(
-      currIds.difference(oldIds).map((MarkerId id) => currMarkers[id]).toSet(),
-    );
-    final Set<Marker> toUpdate = Set<Marker>.from(
-      currIds
-          .intersection(oldIds)
-          .map((MarkerId id) => currMarkers[id])
-          .where((Marker? x) => isChanged(x!, oldMarkers))
-          .toSet(),
-    );
-
-    insertSet = toInsert;
-    deleteSet = toDelete;
-    updateSet = toUpdate;
-  }
-
-  bool isChanged(Marker curr, Map<MarkerId, Marker> oldMarkers) {
-    final Marker old = oldMarkers[curr.markerId]!;
-    return curr != old;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
-    return other is MarkerUpdates &&
-        setEquals(insertSet, other.insertSet) &&
-        setEquals(deleteSet, other.deleteSet) &&
-        setEquals(updateSet, other.updateSet);
-  }
-
-  @override
-  int get hashCode => Object.hash(insertSet, deleteSet, updateSet);
+  })  : insertSet = inserts,
+        deleteSet = deletes,
+        updateSet = updates;
 }

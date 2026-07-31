@@ -16,19 +16,6 @@
 
 part of '../../huawei_map_ohos.dart';
 
-Map<TileOverlayId, TileOverlay> tileOverlayToMap(
-  Iterable<TileOverlay> tileOverlays,
-) {
-  return Map<TileOverlayId, TileOverlay>.fromEntries(
-    tileOverlays.map((TileOverlay tileOverlay) {
-      return MapEntry<TileOverlayId, TileOverlay>(
-        tileOverlay.tileOverlayId,
-        tileOverlay.clone(),
-      );
-    }),
-  );
-}
-
 List<Map<String, dynamic>> tileOverlayToList(Set<TileOverlay> tileOverlays) {
   return tileOverlays.map<Map<String, dynamic>>((TileOverlay t) {
     return tileOverlayToJson(t);
