@@ -168,6 +168,10 @@ abstract class _Param {
 
   static const String radius = 'radius';
 
+  static const String massPoints = 'massPoints';
+
+  static const String screenRadius = 'screenRadius';
+
   static const String northeast = 'northeast';
 
   static const String southwest = 'southwest';

@@ -6,6 +6,9 @@
   heatmaps.
 - **Breaking Change:** Removed the seven declarative overlay set properties
   from `HuaweiMap`. Manage overlays exclusively through `HuaweiMapController`.
+- Added append-only HarmonyOS mass points through
+  `HuaweiMapController.addMassPoints`. Points require only a center, screen
+  radius, and color; no caller-managed ID is needed.
 
 ## 6.11.2+302
 

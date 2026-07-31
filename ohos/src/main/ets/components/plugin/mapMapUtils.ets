@@ -16,6 +16,7 @@
 
 import { MethodChannel, MethodCall, MethodResult, MethodCallHandler } from '@ohos/flutter_ohos';
 import { map, mapCommon } from '@kit.MapKit';
+import { image } from '@kit.ImageKit';
 import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
@@ -33,6 +34,12 @@ import {
 } from './overlayControllers';
 
 const TAG: string = '[MapUtils]';
+
+interface MassPointGroup {
+  screenRadius: number;
+  color: number;
+  items: Array<mapCommon.MassPointItem>;
+}
 
 /** Looks up a Flutter asset's path inside the host hap. */
 export type AssetPathResolver = (assetName: string, packageName?: string) => string;
@@ -99,6 +106,11 @@ export class MapUtils implements MethodCallHandler {
   private clusteringEnabled: boolean = false;
   private clusterOverlay: map.ClusterOverlay | null = null;
   private clusterRebuildPending: boolean = false;
+  private massPointOverlays: Array<map.MassPointOverlay> = [];
+  private massPointIcons: Map<string, image.PixelMap> = new Map();
+  private massPointOverlaySequence: number = 0;
+  private massPointItemSequence: number = 0;
+  private massPointAddQueue: Promise<void> = Promise.resolve();
 
   private mapController: map.MapComponentController | null = null;
   private context: common.UIAbilityContext | null = null;
@@ -135,6 +147,9 @@ export class MapUtils implements MethodCallHandler {
       case Method.CIRCLES_UPDATE:
         this.handleCircleUpdate(call, result);
         break;
+      case Method.MASS_POINTS_ADD:
+        this.handleMassPointsAdd(call, result);
+        break;
       case Method.GROUND_OVERLAYS_UPDATE:
         this.handleGroundOverlayUpdate(call, result);
         break;
@@ -166,6 +181,115 @@ export class MapUtils implements MethodCallHandler {
       default:
         result.notImplemented();
     }
+  }
+
+  // ====================== Append-only mass points ======================
+
+  private handleMassPointsAdd(call: MethodCall, result: MethodResult): void {
+    const args = Convert.normalizeCodecValue(call.args) as Record<string, Object>;
+    const rawPoints = args?.[Param.MASS_POINTS];
+    if (!Array.isArray(rawPoints) || rawPoints.length === 0) {
+      result.success(null);
+      return;
+    }
+
+    const groupsByStyle: Map<string, MassPointGroup> = new Map();
+    (rawPoints as Array<Object>).forEach((rawPoint: Object) => {
+      const point = rawPoint as Record<string, Object>;
+      const screenRadius = Number(point[Param.SCREEN_RADIUS]);
+      const color = Number(point[Param.COLOR]);
+      if (!Number.isFinite(screenRadius) || screenRadius <= 0 || !Number.isFinite(color)) {
+        return;
+      }
+
+      const styleKey = `${screenRadius}:${color}`;
+      let group = groupsByStyle.get(styleKey);
+      if (!group) {
+        group = {
+          screenRadius: screenRadius,
+          color: color,
+          items: []
+        };
+        groupsByStyle.set(styleKey, group);
+      }
+      group.items.push({
+        itemId: `flutter_mass_point_${this.massPointItemSequence++}`,
+        position: Convert.toLatLng(point[Param.CENTER])
+      });
+    });
+
+    const groups: Array<MassPointGroup> = [];
+    groupsByStyle.forEach((group: MassPointGroup) => groups.push(group));
+    this.massPointAddQueue = this.massPointAddQueue
+      .catch(() => {})
+      .then(() => this.addMassPointGroups(groups));
+    this.massPointAddQueue
+      .then(() => result.success(null))
+      .catch((error: Error) => {
+        hilog.error(0x0000, TAG, `addMassPoints failed: ${error.message}`);
+        result.error('MASS_POINTS_ADD_ERROR', error.message, null);
+      });
+  }
+
+  private async addMassPointGroups(groups: Array<MassPointGroup>): Promise<void> {
+    const controller = this.mapController;
+    if (!controller) {
+      throw new Error('MapUtils not initialized');
+    }
+
+    for (const group of groups) {
+      if (group.items.length === 0) {
+        continue;
+      }
+      const icon = await this.getMassPointIcon(group.screenRadius, group.color);
+      const overlay = await controller.addMassPointOverlay({
+        id: `flutter_mass_overlay_${this.massPointOverlaySequence++}`,
+        items: group.items,
+        icon: icon,
+        anchorU: 0.5,
+        anchorV: 0.5
+      });
+      this.massPointOverlays.push(overlay);
+    }
+  }
+
+  private async getMassPointIcon(screenRadius: number, color: number): Promise<image.PixelMap> {
+    const styleKey = `${screenRadius}:${color}`;
+    const cached = this.massPointIcons.get(styleKey);
+    if (cached) {
+      return cached;
+    }
+
+    const pixelRadius = vp2px(screenRadius);
+    const diameter = Math.max(1, Math.ceil(pixelRadius * 2));
+    const center = (diameter - 1) / 2;
+    const pixels = new Uint8Array(diameter * diameter * 4);
+    const alpha = (color >>> 24) & 0xFF;
+    const red = (color >>> 16) & 0xFF;
+    const green = (color >>> 8) & 0xFF;
+    const blue = color & 0xFF;
+
+    for (let y = 0; y < diameter; y++) {
+      for (let x = 0; x < diameter; x++) {
+        const distance = Math.sqrt((x - center) * (x - center) + (y - center) * (y - center));
+        const coverage = Math.max(0, Math.min(1, pixelRadius + 0.5 - distance));
+        const offset = (y * diameter + x) * 4;
+        pixels[offset] = red;
+        pixels[offset + 1] = green;
+        pixels[offset + 2] = blue;
+        pixels[offset + 3] = Math.round(alpha * coverage);
+      }
+    }
+
+    const icon = await image.createPixelMap(pixels.buffer as ArrayBuffer, {
+      size: { width: diameter, height: diameter },
+      srcPixelFormat: image.PixelMapFormat.RGBA_8888,
+      pixelFormat: image.PixelMapFormat.RGBA_8888,
+      alphaType: image.AlphaType.UNPREMUL,
+      editable: false
+    });
+    this.massPointIcons.set(styleKey, icon);
+    return icon;
   }
 
   private handleClearTileCache(call: MethodCall, result: MethodResult): void {
@@ -818,6 +942,15 @@ export class MapUtils implements MethodCallHandler {
   }
 
   dispose(): void {
+    this.massPointOverlays.forEach((overlay: map.MassPointOverlay) => {
+      try { overlay.remove(); } catch (e) { /* ignore */ }
+    });
+    this.massPointOverlays = [];
+    this.massPointIcons.forEach((icon: image.PixelMap) => {
+      icon.release().catch(() => {});
+    });
+    this.massPointIcons.clear();
+
     if (this.clusterOverlay) {
       try { this.clusterOverlay.remove(); } catch (e) { /* ignore */ }
       this.clusterOverlay = null;

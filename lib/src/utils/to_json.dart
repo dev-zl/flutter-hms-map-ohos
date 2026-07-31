@@ -24,6 +24,14 @@ List<dynamic> pointsToJson(List<LatLng> points) {
   return result;
 }
 
+Map<String, dynamic> massPointToJson(MassPoint massPoint) {
+  return <String, dynamic>{
+    _Param.center: latLngToJson(massPoint.center),
+    _Param.screenRadius: massPoint.screenRadius,
+    _Param.color: massPoint.color,
+  };
+}
+
 List<dynamic> holesToJson(List<List<LatLng>> holes) {
   final List<dynamic> result = <dynamic>[];
   for (final List<LatLng> hole in holes) {

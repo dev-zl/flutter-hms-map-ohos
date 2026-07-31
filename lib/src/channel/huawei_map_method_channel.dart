@@ -391,6 +391,19 @@ abstract class _HuaweiMapMethodChannel {
     );
   }
 
+  static Future<void> addMassPoints(
+    Iterable<MassPoint> massPoints, {
+    required int mapId,
+  }) {
+    return setChannel(mapId).invokeMethod<void>(
+      _Method.MassPointsAdd,
+      <String, dynamic>{
+        _Param.massPoints:
+            massPoints.map<Map<String, dynamic>>(massPointToJson).toList(),
+      },
+    );
+  }
+
   static Future<void> updateGroundOverlays(
     GroundOverlayUpdates groundOverlayUpdates, {
     required int mapId,

@@ -88,6 +88,8 @@ abstract class _Method {
 
   static const String CirclesUpdate = '[Circles]update';
 
+  static const String MassPointsAdd = '[MassPoints]add';
+
   static const String MapGetZoomLevel = '[Map]getZoomLevel';
 
   static const String MapGetCameraPosition = '[Map]getCameraPosition';

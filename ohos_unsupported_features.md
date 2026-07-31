@@ -77,6 +77,7 @@
 ### 覆盖物管理
 - MarkersUpdate / PolygonsUpdate / PolylinesUpdate / CirclesUpdate
 - GroundOverlaysUpdate / TileOverlaysUpdate / HeatMapUpdate
+- MassPointsAdd（HarmonyOS 6.0.0(20)+，仅追加，无点击和外部 ID）
 - MarkerStartAnimation / MarkerIsClusterable
 
 ### 工具方法
@@ -92,11 +93,11 @@
 |------|------|--------|--------|----------|
 | 事件监听 | 17 | 16 | 1 | 0 |
 | 地图操作 | 12 | 10 | 0 | 2 |
-| 覆盖物操作 | 12 | 11 | 1 | 0 |
+| 覆盖物操作 | 13 | 12 | 1 | 0 |
 | 工具方法 | 9 | 9 | 0 | 0 |
-| **总计** | **50** | **46** | **2** | **2** |
+| **总计** | **51** | **47** | **2** | **2** |
 
-**支持率：92%**
+**支持率：92.2%**
 
 ---
 
@@ -118,4 +119,3 @@
 - HeatMap 限制：`Convert.ets`
 
 ---
-

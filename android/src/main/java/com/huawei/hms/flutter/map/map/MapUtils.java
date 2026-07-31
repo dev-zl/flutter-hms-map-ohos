@@ -215,6 +215,13 @@ class MapUtils {
                 result.success(true);
                 break;
             }
+            case Method.MASS_POINTS_ADD: {
+                result.error(
+                    "UNSUPPORTED",
+                    "MassPointOverlay is available only on HarmonyOS 6.0.0(20) or later.",
+                    null);
+                break;
+            }
             case Method.GROUND_OVERLAYS_UPDATE: {
                 groundOverlayUtils.insertMulti(call.argument(Param.GROUND_OVERLAYS_TO_INSERT));
                 groundOverlayUtils.updateMulti(call.argument(Param.GROUND_OVERLAYS_TO_UPDATE));

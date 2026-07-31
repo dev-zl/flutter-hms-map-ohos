@@ -70,6 +70,23 @@ Single-object and batch APIs are available for `Marker`, `Polyline`, `Polygon`,
 platform-channel call. These overlays are managed exclusively through
 `HuaweiMapController`; `HuaweiMap` no longer accepts overlay set properties.
 
+HarmonyOS 6.0.0(20) and later also supports append-only, non-interactive mass
+points. Each call can add a batch without assigning IDs:
+
+```dart
+await controller.addMassPoints([
+  const MassPoint(
+    center: LatLng(39.9042, 116.4074),
+    screenRadius: 6,
+    color: 0xFF802AFF,
+  ),
+]);
+```
+
+`screenRadius` stays visually fixed while zooming. Points with different colors
+or radii are automatically grouped into native `MassPointOverlay` instances.
+This API is not available in the Android Huawei Map SDK.
+
 ## Questions or Issues
 
 If you have questions about how to use HMS samples, try the following options:

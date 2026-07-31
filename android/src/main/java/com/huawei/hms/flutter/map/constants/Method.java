@@ -52,6 +52,7 @@ public interface Method {
     String POLYGONS_UPDATE = "[Polygons]update";
     String POLYLINES_UPDATE = "[Polylines]update";
     String CIRCLES_UPDATE = "[Circles]update";
+    String MASS_POINTS_ADD = "[MassPoints]add";
     String MAP_IS_COMPASS_ENABLED = "[Map]isCompassEnabled";
     String MAP_IS_DARK = "[Map]isDark";
     String MAP_IS_MAP_TOOLBAR_ENABLED = "[Map]isMapToolbarEnabled";

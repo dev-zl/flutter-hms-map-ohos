@@ -56,6 +56,7 @@ part 'src/components/joint_type.dart';
 part 'src/components/lat_lng.dart';
 part 'src/components/lat_lng_bounds.dart';
 part 'src/components/location.dart';
+part 'src/components/mass_point.dart';
 part 'src/components/marker.dart';
 part 'src/components/marker_id.dart';
 part 'src/components/marker_updates.dart';
@@ -98,4 +99,3 @@ part 'src/utils/to_json.dart';
 part 'src/utils/utils.dart';
 part 'src/components/mylocation_style.dart';
 part 'src/platform/platform_detector.dart';
-

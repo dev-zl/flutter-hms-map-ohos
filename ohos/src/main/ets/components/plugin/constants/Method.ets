@@ -59,6 +59,7 @@ export class Method {
   static readonly POLYGONS_UPDATE: string = '[Polygons]update';
   static readonly POLYLINES_UPDATE: string = '[Polylines]update';
   static readonly CIRCLES_UPDATE: string = '[Circles]update';
+  static readonly MASS_POINTS_ADD: string = '[MassPoints]add';
 
   static readonly GROUND_OVERLAYS_UPDATE: string = '[GroundOverlays]update';
   static readonly GROUND_OVERLAY_CLICK: string = '[GroundOverlay]click';

@@ -72,6 +72,8 @@ export class Param {
   static readonly CIRCLE_ID: string = 'circleId';
   static readonly CENTER: string = 'center';
   static readonly RADIUS: string = 'radius';
+  static readonly MASS_POINTS: string = 'massPoints';
+  static readonly SCREEN_RADIUS: string = 'screenRadius';
 
   // GroundOverlay params
   static readonly GROUND_OVERLAYS_TO_INSERT: string = 'groundOverlaysToAdd';

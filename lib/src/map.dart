@@ -187,6 +187,18 @@ class HuaweiMapController {
     return _HuaweiMapMethodChannel.updateHeatMaps(heatMapUpdates, mapId: mapId);
   }
 
+  /// Appends lightweight, non-interactive points without rebuilding [HuaweiMap].
+  ///
+  /// This uses HarmonyOS Map Kit's native MassPointOverlay. Points keep their
+  /// screen radius while zooming and do not need IDs.
+  Future<void> addMassPoints(Iterable<MassPoint> massPoints) {
+    final List<MassPoint> values = massPoints.toList(growable: false);
+    if (values.isEmpty) {
+      return Future<void>.value();
+    }
+    return _HuaweiMapMethodChannel.addMassPoints(values, mapId: mapId);
+  }
+
   /// Adds a marker without rebuilding [HuaweiMap].
   Future<void> addMarker(Marker marker) => addMarkers(<Marker>[marker]);
 
