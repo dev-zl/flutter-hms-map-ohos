@@ -48,6 +48,7 @@ export class Method {
   static readonly MAP_GET_VISIBLE_REGION: string = '[Map]getVisibleRegion';
   static readonly MAP_GET_SCREEN_COORDINATE: string = '[Map]getScreenCoordinate';
   static readonly MAP_GET_LAT_LNG: string = '[Map]getLatLng';
+  static readonly MAP_GET_LAT_LNG_FROM_TOUCH: string = '[Map]getLatLngFromTouch';
   static readonly MAP_TAKE_SNAPSHOT: string = '[Map]takeSnapshot';
 
   static readonly CAMERA_MOVE: string = '[Camera]move';

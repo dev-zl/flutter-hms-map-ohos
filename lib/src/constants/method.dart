@@ -72,6 +72,8 @@ abstract class _Method {
 
   static const String MapGetLatLng = '[Map]getLatLng';
 
+  static const String MapGetLatLngFromTouch = '[Map]getLatLngFromTouch';
+
   static const String MapTakeSnapshot = '[Map]takeSnapshot';
 
   static const String CameraMove = '[Camera]move';

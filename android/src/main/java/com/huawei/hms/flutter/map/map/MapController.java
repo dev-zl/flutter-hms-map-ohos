@@ -67,6 +67,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class MapController
@@ -395,6 +396,26 @@ final class MapController
                 } else {
                     result.error(Param.ERROR, Method.MAP_GET_LAT_LNG, null);
                     logger.sendSingleEvent(Method.MAP_GET_LAT_LNG, "getProjection.fromScreenLocation error");
+                }
+                break;
+            }
+            case Method.MAP_GET_LAT_LNG_FROM_TOUCH: {
+                logger.startMethodExecutionTimer(Method.MAP_GET_LAT_LNG_FROM_TOUCH);
+                if (huaweiMap != null) {
+                    final Map<?, ?> localPosition = (Map<?, ?>) call.arguments;
+                    final Number x = (Number) localPosition.get(Param.X);
+                    final Number y = (Number) localPosition.get(Param.Y);
+                    final Point point = new Point(
+                        Math.round(x.floatValue() * compactness),
+                        Math.round(y.floatValue() * compactness));
+                    final LatLng latLng = huaweiMap.getProjection().fromScreenLocation(point);
+                    result.success(ToJson.latLng(latLng));
+                    logger.sendSingleEvent(Method.MAP_GET_LAT_LNG_FROM_TOUCH);
+                } else {
+                    result.error(Param.ERROR, Method.MAP_GET_LAT_LNG_FROM_TOUCH, null);
+                    logger.sendSingleEvent(
+                        Method.MAP_GET_LAT_LNG_FROM_TOUCH,
+                        "getProjection.fromScreenLocation error");
                 }
                 break;
             }

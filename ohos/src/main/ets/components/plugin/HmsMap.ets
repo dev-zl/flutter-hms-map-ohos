@@ -44,6 +44,7 @@ export class HmsMap extends PlatformView {
   private drawingPoints: Array<mapCommon.LatLng> = [];
   private lastDrawingPoint: mapCommon.MapPoint | null = null;
   private activeTouchId: number | null = null;
+  private uiContext: UIContext | null = null;
 
   constructor(mapOptions: mapCommon.MapOptions, drawingEnabled: boolean) {
     super();
@@ -102,6 +103,24 @@ export class HmsMap extends PlatformView {
       this.finishDrawing();
     }
     this.drawingEnabled = enabled;
+  }
+
+  setUIContext(uiContext: UIContext): void {
+    this.uiContext = uiContext;
+  }
+
+  getLatLngFromTouch(pointInVp: mapCommon.MapPoint): mapCommon.LatLng {
+    if (!this.mapController) {
+      throw new Error('MapComponent is not ready');
+    }
+    if (!this.uiContext) {
+      throw new Error('UIContext is not ready');
+    }
+    const pointInPx: mapCommon.MapPoint = {
+      positionX: Math.round(this.uiContext.vp2px(pointInVp.positionX)),
+      positionY: Math.round(this.uiContext.vp2px(pointInVp.positionY))
+    };
+    return this.mapController.getProjection().fromScreenLocation(pointInPx);
   }
 
   handleTouch(event: TouchEvent, uiContext: UIContext): void {
@@ -220,6 +239,7 @@ export class HmsMap extends PlatformView {
     }
     this.mapController = null;
     this.methodChannel = null;
+    this.uiContext = null;
     this.drawingPoints = [];
     this.activeTouchId = null;
     hilog.info(0x0000, TAG, 'HmsMap disposed');
@@ -254,6 +274,7 @@ struct HmsMapHost {
       .height('100%')
       .zIndex(99)
       .onAppear(() => {
+        getHmsMapFromParams(this.params).setUIContext(this.getUIContext());
         hilog.info(0x0000, TAG, 'MapComponent onAppear');
       })
       .onTouch((event: TouchEvent) => {

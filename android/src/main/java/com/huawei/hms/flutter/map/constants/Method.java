@@ -45,6 +45,7 @@ public interface Method {
     String MAP_GET_VISIBLE_REGION = "[Map]getVisibleRegion";
     String MAP_GET_SCREEN_COORDINATE = "[Map]getScreenCoordinate";
     String MAP_GET_LAT_LNG = "[Map]getLatLng";
+    String MAP_GET_LAT_LNG_FROM_TOUCH = "[Map]getLatLngFromTouch";
     String MAP_TAKE_SNAPSHOT = "[Map]takeSnapshot";
     String CAMERA_MOVE = "[Camera]move";
     String CAMERA_ANIMATE = "[Camera]animate";

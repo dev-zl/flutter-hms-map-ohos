@@ -628,13 +628,9 @@ class HuaweiMapController {
       );
     }
 
-    final double devicePixelRatio =
-        MediaQuery.of(_huaweiMapState.context).devicePixelRatio;
-    return getLatLng(
-      ScreenCoordinate(
-        x: (localPosition.dx * devicePixelRatio).round(),
-        y: (localPosition.dy * devicePixelRatio).round(),
-      ),
+    return _HuaweiMapMethodChannel.getLatLngFromTouch(
+      localPosition,
+      mapId: mapId,
     );
   }
 

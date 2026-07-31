@@ -134,8 +134,9 @@ Listener(
 )
 ```
 
-`getLatLngFromTouch` applies the current view's device-pixel ratio internally.
-Do not multiply `event.localPosition` by a density value yourself. The supplied
+`getLatLngFromTouch` performs native logical-to-physical coordinate conversion:
+HarmonyOS uses `UIContext.vp2px()` and Android uses the display density. Do not
+multiply `event.localPosition` by a density value yourself. The supplied
 position must be relative to the map's top-left corner.
 
 ## Questions or Issues

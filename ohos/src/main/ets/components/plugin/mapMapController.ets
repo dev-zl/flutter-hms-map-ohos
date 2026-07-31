@@ -149,6 +149,17 @@ export class MapController implements MethodCallHandler {
         break;
       }
 
+      case Method.MAP_GET_LAT_LNG_FROM_TOUCH: {
+        try {
+          const pointInVp = Convert.toPoint(normalizedArgs);
+          const latLng = this.hmsMap.getLatLngFromTouch(pointInVp);
+          result.success(ToJson.latLng(latLng));
+        } catch (e) {
+          result.error('ERROR', `getLatLngFromTouch failed: ${e}`, null);
+        }
+        break;
+      }
+
       case Method.CAMERA_MOVE: {
         try {
           const args = (normalizedArgs ?? {}) as Record<string, Object>;

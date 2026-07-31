@@ -651,6 +651,25 @@ abstract class _HuaweiMapMethodChannel {
     );
   }
 
+  static Future<LatLng> getLatLngFromTouch(
+    Offset localPosition, {
+    required int mapId,
+  }) async {
+    final List<dynamic> latLng =
+        await setChannel(mapId).invokeMethod<List<dynamic>>(
+      _Method.MapGetLatLngFromTouch,
+      <String, double>{
+        _Param.x: localPosition.dx,
+        _Param.y: localPosition.dy,
+      },
+    ) as List<dynamic>;
+
+    return LatLng(
+      latLng[0],
+      latLng[1],
+    );
+  }
+
   static Future<double?> getScalePerPixel({required int mapId}) {
     return setChannel(mapId).invokeMethod<double>(
       _Method.MapGetScalePerPixel,
@@ -736,7 +755,6 @@ abstract class _HuaweiMapMethodChannel {
     PlatformViewCreatedCallback onPlatformViewCreated,
   ) {
     if (PlatformDetector.isHarmonyOS) {
-
       return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           debugPrint(
@@ -785,7 +803,6 @@ abstract class _HuaweiMapMethodChannel {
               return controller;
             },
           );
-
         },
       );
     } else {
