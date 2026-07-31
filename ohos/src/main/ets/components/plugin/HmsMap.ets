@@ -104,7 +104,7 @@ export class HmsMap extends PlatformView {
     this.drawingEnabled = enabled;
   }
 
-  handleTouch(event: TouchEvent): void {
+  handleTouch(event: TouchEvent, uiContext: UIContext): void {
     if (!this.drawingEnabled) return;
 
     try { event.preventDefault(); } catch (e) { /* MapComponent may not expose a default action. */ }
@@ -119,17 +119,17 @@ export class HmsMap extends PlatformView {
       this.drawingPoints = [];
       this.lastDrawingPoint = null;
       this.activeTouchId = touch.id;
-      this.appendDrawingPoint(touch, Method.MAP_ON_DRAW_START);
+      this.appendDrawingPoint(touch, Method.MAP_ON_DRAW_START, uiContext);
       return;
     }
 
     const touch = this.findActiveTouch(event);
     if (event.type === TouchType.Move) {
-      if (touch) this.appendDrawingPoint(touch, Method.MAP_ON_DRAW_UPDATE);
+      if (touch) this.appendDrawingPoint(touch, Method.MAP_ON_DRAW_UPDATE, uiContext);
       return;
     }
     if (event.type === TouchType.Up) {
-      if (touch) this.appendDrawingPoint(touch, null);
+      if (touch) this.appendDrawingPoint(touch, null, uiContext);
       this.finishDrawing();
       return;
     }
@@ -153,11 +153,17 @@ export class HmsMap extends PlatformView {
     return null;
   }
 
-  private appendDrawingPoint(touch: TouchObject, eventMethod: string | null): void {
+  private appendDrawingPoint(
+    touch: TouchObject,
+    eventMethod: string | null,
+    uiContext: UIContext
+  ): void {
     if (!this.mapController) return;
+    // ArkUI touch coordinates are local logical coordinates (vp), while
+    // MapKit Projection expects screen pixels relative to the map's top-left.
     const point: mapCommon.MapPoint = {
-      positionX: Math.round(vp2px(touch.x)),
-      positionY: Math.round(vp2px(touch.y))
+      positionX: Math.round(uiContext.vp2px(touch.x)),
+      positionY: Math.round(uiContext.vp2px(touch.y))
     };
     if (this.lastDrawingPoint
       && point.positionX === this.lastDrawingPoint.positionX
@@ -235,19 +241,28 @@ function getMapCallbackFromParams(params: Params): AsyncCallback<map.MapComponen
   return getHmsMapFromParams(params).getMapCallback();
 }
 
+@Component
+struct HmsMapHost {
+  params: Params = new Params();
+
+  build() {
+    MapComponent({
+      mapOptions: getMapOptionsFromParams(this.params),
+      mapCallback: getMapCallbackFromParams(this.params)
+    })
+      .width('100%')
+      .height('100%')
+      .zIndex(99)
+      .onAppear(() => {
+        hilog.info(0x0000, TAG, 'MapComponent onAppear');
+      })
+      .onTouch((event: TouchEvent) => {
+        getHmsMapFromParams(this.params).handleTouch(event, this.getUIContext());
+      })
+  }
+}
+
 @Builder
 function HmsMapBuilder(params: Params) {
-  MapComponent({
-    mapOptions: getMapOptionsFromParams(params),
-    mapCallback: getMapCallbackFromParams(params)
-  })
-    .width('100%')
-    .height('100%')
-    .zIndex(99)
-    .onAppear(() => {
-      hilog.info(0x0000, TAG, 'MapComponent onAppear');
-    })
-    .onTouch((event: TouchEvent) => {
-      getHmsMapFromParams(params).handleTouch(event);
-    })
+  HmsMapHost({ params: params })
 }
