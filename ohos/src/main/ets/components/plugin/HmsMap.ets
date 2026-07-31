@@ -263,7 +263,10 @@ function getMapCallbackFromParams(params: Params): AsyncCallback<map.MapComponen
 
 @Component
 struct HmsMapHost {
-  params: Params = new Params();
+  // Params is declared by flutter_ohos with `export declare class`, so it has
+  // no runtime constructor. ArkUI replaces this placeholder with the value
+  // passed by HmsMapBuilder before build().
+  params: Params = {} as Params;
 
   build() {
     MapComponent({
