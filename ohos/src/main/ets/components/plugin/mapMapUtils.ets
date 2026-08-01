@@ -18,6 +18,7 @@ import { MethodChannel, MethodCall, MethodResult, MethodCallHandler } from '@oho
 import { map, mapCommon } from '@kit.MapKit';
 import { image } from '@kit.ImageKit';
 import { common } from '@kit.AbilityKit';
+import { deviceInfo } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 import { Method } from './constants/Method';
@@ -107,6 +108,7 @@ export class MapUtils implements MethodCallHandler {
   private clusterOverlay: map.ClusterOverlay | null = null;
   private clusterRebuildPending: boolean = false;
   private massPointOverlays: Array<map.MassPointOverlay> = [];
+  private massPointTileOverlays: Array<map.TileOverlay> = [];
   private massPointIcons: Map<string, image.PixelMap> = new Map();
   private massPointOverlaySequence: number = 0;
   private massPointItemSequence: number = 0;
@@ -227,7 +229,8 @@ export class MapUtils implements MethodCallHandler {
       .then(() => result.success(null))
       .catch((error: Error) => {
         hilog.error(0x0000, TAG, `addMassPoints failed: ${error.message}`);
-        result.error('MASS_POINTS_ADD_ERROR', error.message, null);
+        // Keep an unsupported native overlay from breaking the Flutter page.
+        result.success(null);
       });
   }
 
@@ -237,19 +240,148 @@ export class MapUtils implements MethodCallHandler {
       throw new Error('MapUtils not initialized');
     }
 
-    for (const group of groups) {
+    const apiVersion = deviceInfo.sdkApiVersion;
+    if (apiVersion < 20) {
+      hilog.info(0x0000, TAG, `Mass points use TileOverlay on API ${apiVersion}`);
+      this.addMassPointTileOverlay(groups);
+      return;
+    }
+
+    for (let index = 0; index < groups.length; index++) {
+      const group = groups[index];
       if (group.items.length === 0) {
         continue;
       }
-      const icon = await this.getMassPointIcon(group.screenRadius, group.color);
-      const overlay = await controller.addMassPointOverlay({
-        id: `flutter_mass_overlay_${this.massPointOverlaySequence++}`,
-        items: group.items,
-        icon: icon,
-        anchorU: 0.5,
-        anchorV: 0.5
-      });
-      this.massPointOverlays.push(overlay);
+      try {
+        const icon = await this.getMassPointIcon(group.screenRadius, group.color);
+        const overlay = await controller.addMassPointOverlay({
+          id: `flutter_mass_overlay_${this.massPointOverlaySequence++}`,
+          items: group.items,
+          icon: icon,
+          anchorU: 0.5,
+          anchorV: 0.5
+        });
+        this.massPointOverlays.push(overlay);
+      } catch (error) {
+        hilog.warn(
+          0x0000,
+          TAG,
+          `MassPointOverlay unavailable on API ${apiVersion}, fallback to TileOverlay: ${error}`
+        );
+        this.addMassPointTileOverlay(groups.slice(index));
+        return;
+      }
+    }
+  }
+
+  private addMassPointTileOverlay(groups: Array<MassPointGroup>): void {
+    const controller = this.mapController;
+    if (!controller) {
+      throw new Error('MapUtils not initialized');
+    }
+    const tileProvider: mapCommon.TileProvider = (x: number, y: number, z: number): Promise<ArrayBuffer> => {
+      return this.renderMassPointTile(groups, x, y, z);
+    };
+    const overlay = controller.addTileOverlay({
+      tileProvider: tileProvider,
+      transparency: 0,
+      fadeIn: false,
+      visible: true,
+      zIndex: 1
+    });
+    this.massPointTileOverlays.push(overlay);
+  }
+
+  private async renderMassPointTile(
+    groups: Array<MassPointGroup>,
+    tileX: number,
+    tileY: number,
+    zoom: number
+  ): Promise<ArrayBuffer> {
+    const tileSize = 256;
+    const pixels = new Uint8Array(tileSize * tileSize * 4);
+    const tileCount = Math.pow(2, zoom);
+
+    for (const group of groups) {
+      const radius = Math.max(0.5, group.screenRadius);
+      const alpha = (group.color >>> 24) & 0xFF;
+      const red = (group.color >>> 16) & 0xFF;
+      const green = (group.color >>> 8) & 0xFF;
+      const blue = group.color & 0xFF;
+      for (const item of group.items) {
+        const longitude = item.position.longitude;
+        const latitude = Math.max(-85.05112878, Math.min(85.05112878, item.position.latitude));
+        const latitudeRadians = latitude * Math.PI / 180;
+        const worldTileX = (longitude + 180) / 360 * tileCount;
+        const worldTileY = (1 - Math.log(
+          Math.tan(latitudeRadians) + 1 / Math.cos(latitudeRadians)
+        ) / Math.PI) / 2 * tileCount;
+        const localX = (worldTileX - tileX) * tileSize;
+        const localY = (worldTileY - tileY) * tileSize;
+        if (localX < -radius || localX > tileSize + radius ||
+          localY < -radius || localY > tileSize + radius) {
+          continue;
+        }
+        this.drawMassPointOnTile(
+          pixels,
+          tileSize,
+          localX,
+          localY,
+          radius,
+          red,
+          green,
+          blue,
+          alpha
+        );
+      }
+    }
+
+    const pixelMap = await image.createPixelMap(pixels.buffer as ArrayBuffer, {
+      size: { width: tileSize, height: tileSize },
+      srcPixelFormat: image.PixelMapFormat.RGBA_8888,
+      pixelFormat: image.PixelMapFormat.RGBA_8888,
+      alphaType: image.AlphaType.UNPREMUL,
+      editable: false
+    });
+    const packer = image.createImagePacker();
+    try {
+      return await packer.packing(pixelMap, { format: 'image/png', quality: 100 });
+    } finally {
+      await pixelMap.release();
+      await packer.release();
+    }
+  }
+
+  private drawMassPointOnTile(
+    pixels: Uint8Array,
+    tileSize: number,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    red: number,
+    green: number,
+    blue: number,
+    alpha: number
+  ): void {
+    const minX = Math.max(0, Math.floor(centerX - radius - 1));
+    const maxX = Math.min(tileSize - 1, Math.ceil(centerX + radius + 1));
+    const minY = Math.max(0, Math.floor(centerY - radius - 1));
+    const maxY = Math.min(tileSize - 1, Math.ceil(centerY + radius + 1));
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const dx = x + 0.5 - centerX;
+        const dy = y + 0.5 - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const coverage = Math.max(0, Math.min(1, radius + 0.5 - distance));
+        if (coverage <= 0) {
+          continue;
+        }
+        const offset = (y * tileSize + x) * 4;
+        pixels[offset] = red;
+        pixels[offset + 1] = green;
+        pixels[offset + 2] = blue;
+        pixels[offset + 3] = Math.round(alpha * coverage);
+      }
     }
   }
 
@@ -946,6 +1078,10 @@ export class MapUtils implements MethodCallHandler {
       try { overlay.remove(); } catch (e) { /* ignore */ }
     });
     this.massPointOverlays = [];
+    this.massPointTileOverlays.forEach((overlay: map.TileOverlay) => {
+      try { overlay.remove(); } catch (e) { /* ignore */ }
+    });
+    this.massPointTileOverlays = [];
     this.massPointIcons.forEach((icon: image.PixelMap) => {
       icon.release().catch(() => {});
     });

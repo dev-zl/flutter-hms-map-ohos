@@ -9,6 +9,8 @@
 - Added append-only HarmonyOS mass points through
   `HuaweiMapController.addMassPoints`. Points require only a center, screen
   radius, and color; no caller-managed ID is needed.
+- HarmonyOS API levels below 20 render mass points with `TileOverlay`; API 20
+  and later prefer `MassPointOverlay` and fall back to tiles when unavailable.
 - Added `HuaweiMapController.getLatLngFromTouch` for converting a map-local
   Flutter touch position to a `LatLng` without caller-managed density scaling.
 

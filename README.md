@@ -70,8 +70,8 @@ Single-object and batch APIs are available for `Marker`, `Polyline`, `Polygon`,
 platform-channel call. These overlays are managed exclusively through
 `HuaweiMapController`; `HuaweiMap` no longer accepts overlay set properties.
 
-Android and HarmonyOS 6.0.0(20) and later support append-only, non-interactive
-mass points. Each call can add a batch without assigning IDs:
+Android and HarmonyOS support append-only, non-interactive mass points. Each
+call can add a batch without assigning IDs:
 
 ```dart
 await controller.addMassPoints([
@@ -83,11 +83,12 @@ await controller.addMassPoints([
 ]);
 ```
 
-`screenRadius` stays visually fixed while zooming. Points with different colors
-or radii are automatically grouped into native `MassPointOverlay` instances.
-HarmonyOS uses Map Kit's native `MassPointOverlay`. Because Huawei Map Kit for
-Android has no matching overlay, Android draws all points in one shared,
-non-interactive view and reprojects them when the camera moves.
+`screenRadius` stays visually fixed while zooming. On HarmonyOS, API levels
+below 20 render the points with `TileOverlay`; API 20 and later prefer native
+`MassPointOverlay` and automatically fall back to tiles when it is unavailable.
+Because Huawei Map Kit for Android has no matching overlay, Android draws all
+points in one shared, non-interactive view and reprojects them when the camera
+moves.
 
 ## Draw on the map
 
