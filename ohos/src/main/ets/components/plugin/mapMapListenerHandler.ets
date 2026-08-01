@@ -78,6 +78,7 @@ export class MapListenerHandler {
     });
 
     this.bindVoid('cameraIdle', () => {
+      hilog.info(0x0000, TAG, `cameraIdle fired for map ${this.mapId}`);
       this.invokeMethod(Method.CAMERA_ON_IDLE, null);
     });
 

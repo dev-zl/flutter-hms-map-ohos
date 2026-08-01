@@ -158,6 +158,9 @@ export class MapFactory extends PlatformViewFactory {
       const controller = new MapController(viewId, this.context, nativeCtrl, hmsMap, this.assetResolver);
       channel.setMethodCallHandler(controller);
       controller.setMethodChannel(channel);
+      if (options[Param.TRACK_CAMERA_POSITION] !== undefined) {
+        controller.setTrackCameraPosition(options[Param.TRACK_CAMERA_POSITION] as boolean);
+      }
       hilog.info(0x0000, TAG, `MethodChannel handler attached id=${viewId}`);
       if (pendingWaitForMapResult) {
         pendingWaitForMapResult.success(null);
