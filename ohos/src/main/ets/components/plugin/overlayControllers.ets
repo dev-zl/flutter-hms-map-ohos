@@ -158,7 +158,9 @@ export class PolylineController {
 
   update(data: Record<string, Object>): void {
     if (data[Param.COLOR] !== undefined) this.polyline.setColor(Convert.toColor(data[Param.COLOR]));
-    if (data[Param.WIDTH] !== undefined) this.polyline.setWidth(data[Param.WIDTH] as number);
+    if (data[Param.WIDTH] !== undefined) {
+      this.polyline.setWidth(vp2px(data[Param.WIDTH] as number));
+    }
     if (data[Param.POINTS] !== undefined) {
       this.polyline.setPoints(Convert.toLatLngList(data[Param.POINTS] as Array<Object>));
     }

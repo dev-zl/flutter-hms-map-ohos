@@ -83,9 +83,9 @@ await controller.addMassPoints([
 ]);
 ```
 
-`screenRadius` stays visually fixed while zooming. On HarmonyOS, API levels
-below 20 render the points with `TileOverlay`; API 20 and later prefer native
-`MassPointOverlay` and automatically fall back to tiles when it is unavailable.
+`screenRadius` stays visually fixed while zooming. On HarmonyOS, mass points
+use the native `MassPointOverlay` and require API 20 or later. Calls on earlier
+API levels are ignored with a native log.
 Because Huawei Map Kit for Android has no matching overlay, Android draws all
 points in one shared, non-interactive view and reprojects them when the camera
 moves.

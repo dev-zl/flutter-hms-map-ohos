@@ -345,7 +345,9 @@ export class Convert {
     const opts: mapCommon.MapPolylineOptions = { points: points };
 
     if (data[Param.COLOR] !== undefined) opts.color = Convert.toColor(data[Param.COLOR]);
-    if (data[Param.WIDTH] !== undefined) opts.width = data[Param.WIDTH] as number;
+    // Flutter sends logical pixels (vp). HarmonyOS Map Kit expects physical
+    // pixels for polyline width, so keep it visually aligned with CustomPaint.
+    if (data[Param.WIDTH] !== undefined) opts.width = vp2px(data[Param.WIDTH] as number);
     if (data[Param.END_CAP] !== undefined) opts.endCap = Convert.toCapStyle(data[Param.END_CAP]);
     if (data[Param.START_CAP] !== undefined) opts.startCap = Convert.toCapStyle(data[Param.START_CAP]);
     if (data[Param.JOINT_TYPE] !== undefined) opts.jointType = Convert.toJointType(data[Param.JOINT_TYPE] as number);
