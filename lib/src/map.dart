@@ -198,14 +198,24 @@ class HuaweiMapController {
 
   /// Appends lightweight, non-interactive points without rebuilding [HuaweiMap].
   ///
-  /// HarmonyOS uses Map Kit's native MassPointOverlay. Android uses one native
-  /// green HeatMap for maximum throughput and ignores per-point colors.
-  Future<void> addMassPoints(Iterable<MassPoint> massPoints) {
+  /// HarmonyOS uses Map Kit's native MassPointOverlay. Android keeps a bounded
+  /// pool of native, fixed-size green markers for points in the current viewport.
+  /// A positive [verticalOffset] moves every added point down by that many
+  /// logical screen pixels.
+  Future<void> addMassPoints(
+    Iterable<MassPoint> massPoints, {
+    double verticalOffset = 0,
+  }) {
+    assert(verticalOffset >= 0);
     final List<MassPoint> values = massPoints.toList(growable: false);
     if (values.isEmpty) {
       return Future<void>.value();
     }
-    return _HuaweiMapMethodChannel.addMassPoints(values, mapId: mapId);
+    return _HuaweiMapMethodChannel.addMassPoints(
+      values,
+      mapId: mapId,
+      verticalOffset: verticalOffset,
+    );
   }
 
   /// Adds a marker without rebuilding [HuaweiMap].

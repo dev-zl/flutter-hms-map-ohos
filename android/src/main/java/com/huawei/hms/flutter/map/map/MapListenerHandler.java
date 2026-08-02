@@ -53,11 +53,17 @@ public class MapListenerHandler implements MapListener {
 
     private final HMSLogger logger;
 
+    private final Runnable onCameraMoveStarted;
+
+    private final Runnable onCameraIdle;
+
     MapListenerHandler(final int id, final MapUtils mapUtils, final MethodChannel mChannel,
-        final Application application) {
+        final Application application, final Runnable onCameraMoveStarted, final Runnable onCameraIdle) {
         this.id = id;
         this.mChannel = mChannel;
         this.mapUtils = mapUtils;
+        this.onCameraMoveStarted = onCameraMoveStarted;
+        this.onCameraIdle = onCameraIdle;
         logger = HMSLogger.getInstance(application);
     }
 
@@ -217,6 +223,7 @@ public class MapListenerHandler implements MapListener {
 
     @Override
     public void onCameraIdle() {
+        onCameraIdle.run();
         logger.startMethodExecutionTimer(Method.CAMERA_ON_IDLE);
         mChannel.invokeMethod(Method.CAMERA_ON_IDLE, Collections.singletonMap(Param.MAP, id));
         logger.sendPeriodicEvent(Method.CAMERA_ON_IDLE);
@@ -224,6 +231,7 @@ public class MapListenerHandler implements MapListener {
 
     @Override
     public void onCameraMoveStarted(final int reason) {
+        onCameraMoveStarted.run();
         logger.startMethodExecutionTimer(Method.CAMERA_ON_MOVE_STARTED);
         final Map<String, Object> arguments = new HashMap<>();
         arguments.put(Param.REASON, reason);

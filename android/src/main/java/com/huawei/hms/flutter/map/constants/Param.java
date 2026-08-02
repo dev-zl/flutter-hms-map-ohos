@@ -35,6 +35,7 @@ public interface Param {
     String CIRCLES_TO_DELETE = "circleIdsToRemove";
     String MASS_POINTS = "massPoints";
     String SCREEN_RADIUS = "screenRadius";
+    String VERTICAL_OFFSET = "verticalOffset";
     String HEAT_MAPS_TO_INSERT = "heatMapsToAdd";
     String HEAT_MAPS_TO_UPDATE = "heatMapsToChange";
     String HEAT_MAPS_TO_DELETE = "heatMapIdsToRemove";

@@ -192,6 +192,8 @@ export class MapUtils implements MethodCallHandler {
   private handleMassPointsAdd(call: MethodCall, result: MethodResult): void {
     const args = Convert.normalizeCodecValue(call.args) as Record<string, Object>;
     const rawPoints = args?.[Param.MASS_POINTS];
+    const verticalOffsetValue = Number(args?.[Param.VERTICAL_OFFSET] ?? 0);
+    const verticalOffset = Number.isFinite(verticalOffsetValue) ? Math.max(0, verticalOffsetValue) : 0;
     if (!Array.isArray(rawPoints) || rawPoints.length === 0) {
       result.success(null);
       return;
@@ -226,7 +228,7 @@ export class MapUtils implements MethodCallHandler {
     groupsByStyle.forEach((group: MassPointGroup) => groups.push(group));
     this.massPointAddQueue = this.massPointAddQueue
       .catch(() => {})
-      .then(() => this.addMassPointGroups(groups));
+      .then(() => this.addMassPointGroups(groups, verticalOffset));
     this.massPointAddQueue
       .then(() => result.success(null))
       .catch((error: Error) => {
@@ -236,7 +238,7 @@ export class MapUtils implements MethodCallHandler {
       });
   }
 
-  private async addMassPointGroups(groups: Array<MassPointGroup>): Promise<void> {
+  private async addMassPointGroups(groups: Array<MassPointGroup>, verticalOffset: number): Promise<void> {
     const controller = this.mapController;
     if (!controller) {
       throw new Error('MapUtils not initialized');
@@ -255,20 +257,26 @@ export class MapUtils implements MethodCallHandler {
       if (group.items.length === 0) {
         continue;
       }
-      const icon = await this.getMassPointIcon(group.screenRadius, group.color);
+      const icon = await this.getMassPointIcon(group.screenRadius, group.color, verticalOffset);
+      const diameter = Math.max(1, Math.ceil(vp2px(group.screenRadius) * 2));
+      const offsetPixels = Math.max(0, Math.round(vp2px(verticalOffset)));
       const overlay = await controller.addMassPointOverlay({
         id: `flutter_mass_overlay_${this.massPointOverlaySequence++}`,
         items: group.items,
         icon: icon,
         anchorU: 0.5,
-        anchorV: 0.5
+        anchorV: diameter * 0.5 / (diameter + offsetPixels)
       });
       this.massPointOverlays.push(overlay);
     }
   }
 
-  private async getMassPointIcon(screenRadius: number, color: number): Promise<image.PixelMap> {
-    const styleKey = `${screenRadius}:${color}`;
+  private async getMassPointIcon(
+    screenRadius: number,
+    color: number,
+    verticalOffset: number
+  ): Promise<image.PixelMap> {
+    const styleKey = `${screenRadius}:${color}:${verticalOffset}`;
     const cached = this.massPointIcons.get(styleKey);
     if (cached) {
       return cached;
@@ -276,16 +284,21 @@ export class MapUtils implements MethodCallHandler {
 
     const pixelRadius = vp2px(screenRadius);
     const diameter = Math.max(1, Math.ceil(pixelRadius * 2));
-    const center = (diameter - 1) / 2;
-    const pixels = new Uint8Array(diameter * diameter * 4);
+    const offsetPixels = Math.max(0, Math.round(vp2px(verticalOffset)));
+    const height = diameter + offsetPixels;
+    const centerX = (diameter - 1) / 2;
+    const centerY = centerX + offsetPixels;
+    const pixels = new Uint8Array(diameter * height * 4);
     const alpha = (color >>> 24) & 0xFF;
     const red = (color >>> 16) & 0xFF;
     const green = (color >>> 8) & 0xFF;
     const blue = color & 0xFF;
 
-    for (let y = 0; y < diameter; y++) {
+    for (let y = 0; y < height; y++) {
       for (let x = 0; x < diameter; x++) {
-        const distance = Math.sqrt((x - center) * (x - center) + (y - center) * (y - center));
+        const distance = Math.sqrt(
+          (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY)
+        );
         const coverage = Math.max(0, Math.min(1, pixelRadius + 0.5 - distance));
         const offset = (y * diameter + x) * 4;
         pixels[offset] = red;
@@ -296,7 +309,7 @@ export class MapUtils implements MethodCallHandler {
     }
 
     const icon = await image.createPixelMap(pixels.buffer as ArrayBuffer, {
-      size: { width: diameter, height: diameter },
+      size: { width: diameter, height: height },
       srcPixelFormat: image.PixelMapFormat.RGBA_8888,
       pixelFormat: image.PixelMapFormat.RGBA_8888,
       alphaType: image.AlphaType.UNPREMUL,

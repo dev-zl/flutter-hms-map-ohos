@@ -174,6 +174,8 @@ abstract class _Param {
 
   static const String screenRadius = 'screenRadius';
 
+  static const String verticalOffset = 'verticalOffset';
+
   static const String northeast = 'northeast';
 
   static const String southwest = 'southwest';

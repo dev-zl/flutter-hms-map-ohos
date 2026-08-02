@@ -80,14 +80,17 @@ await controller.addMassPoints([
     screenRadius: 6,
     color: 0xFF802AFF,
   ),
-]);
+], verticalOffset: 12);
 ```
 
-`screenRadius` stays visually fixed while zooming. On HarmonyOS, mass points
+`screenRadius` stays visually fixed while zooming. A positive `verticalOffset`
+moves the rendered circles down by that many logical screen pixels. On
+HarmonyOS, mass points
 use the native `MassPointOverlay` and require API 20 or later. Calls on earlier
 API levels are ignored with a native log. Because Huawei Map Kit for Android
-has no matching overlay, Android renders all mass points in one native green
-HeatMap for maximum throughput. Android ignores individual mass-point colors.
+has no matching overlay, Android renders up to 800 uniformly sampled visible
+points with a reusable pool of native, fixed-size green markers. Marker updates
+run only after the camera becomes idle. Android ignores individual point colors.
 
 ## Draw on the map
 

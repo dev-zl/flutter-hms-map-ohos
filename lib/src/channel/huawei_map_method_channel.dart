@@ -439,12 +439,14 @@ abstract class _HuaweiMapMethodChannel {
   static Future<void> addMassPoints(
     Iterable<MassPoint> massPoints, {
     required int mapId,
+    required double verticalOffset,
   }) {
     return setChannel(mapId).invokeMethod<void>(
       _Method.MassPointsAdd,
       <String, dynamic>{
         _Param.massPoints:
             massPoints.map<Map<String, dynamic>>(massPointToJson).toList(),
+        _Param.verticalOffset: verticalOffset,
       },
     );
   }
