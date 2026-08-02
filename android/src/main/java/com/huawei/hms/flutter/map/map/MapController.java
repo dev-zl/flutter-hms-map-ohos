@@ -94,7 +94,7 @@ final class MapController
 
     private final FrameLayout mapContainer;
 
-    private final MassPointOverlayView massPointOverlayView;
+    private final MassPointHeatMapOverlay massPointHeatMapOverlay;
 
     private final View drawingTouchView;
 
@@ -184,9 +184,7 @@ final class MapController
         mapContainer.addView(mapView, new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         compactness = context.getResources().getDisplayMetrics().density;
-        massPointOverlayView = new MassPointOverlayView(mActivity, compactness);
-        mapContainer.addView(massPointOverlayView, new FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        massPointHeatMapOverlay = new MassPointHeatMapOverlay();
         drawingTouchView = new View(mActivity);
         drawingTouchView.setBackgroundColor(Color.TRANSPARENT);
         drawingTouchView.setClickable(true);
@@ -202,12 +200,7 @@ final class MapController
         this.activityPluginBinding = activityPluginBinding;
         activityHashCode = activityPluginBinding.getActivity().hashCode();
         mapUtils = new MapUtils(methodChannel, compactness, application);
-        mapListenerHandler = new MapListenerHandler(
-            id,
-            mapUtils,
-            methodChannel,
-            application,
-            massPointOverlayView::invalidateForCameraChange);
+        mapListenerHandler = new MapListenerHandler(id, mapUtils, methodChannel, application);
         logger = HMSLogger.getInstance(application);
     }
 
@@ -496,7 +489,7 @@ final class MapController
                 break;
             }
             case Method.MASS_POINTS_ADD: {
-                massPointOverlayView.addMassPoints(call.argument(Param.MASS_POINTS));
+                massPointHeatMapOverlay.addMassPoints(call.argument(Param.MASS_POINTS));
                 result.success(true);
                 break;
             }
@@ -508,7 +501,7 @@ final class MapController
     @Override
     public void onMapReady(final HuaweiMap huaweiMap) {
         this.huaweiMap = huaweiMap;
-        massPointOverlayView.setMap(huaweiMap);
+        massPointHeatMapOverlay.setMap(huaweiMap);
 
         if (allGesturesEnabled != null) {
             logger.startMethodExecutionTimer("MapController-setAllGesturesEnabled");
@@ -598,7 +591,7 @@ final class MapController
         disposed = true;
         drawingTouchView.setOnTouchListener(null);
         drawingPoints.clear();
-        massPointOverlayView.clear();
+        massPointHeatMapOverlay.clear();
         methodChannel.setMethodCallHandler(null);
         mapListenerHandler.setMapListener(null);
         getApplication().unregisterActivityLifecycleCallbacks(this);

@@ -198,8 +198,8 @@ class HuaweiMapController {
 
   /// Appends lightweight, non-interactive points without rebuilding [HuaweiMap].
   ///
-  /// HarmonyOS uses Map Kit's native MassPointOverlay; Android uses one shared
-  /// overlay view. Points keep their screen radius while zooming and need no IDs.
+  /// HarmonyOS uses Map Kit's native MassPointOverlay. Android uses one native
+  /// green HeatMap for maximum throughput and ignores per-point colors.
   Future<void> addMassPoints(Iterable<MassPoint> massPoints) {
     final List<MassPoint> values = massPoints.toList(growable: false);
     if (values.isEmpty) {

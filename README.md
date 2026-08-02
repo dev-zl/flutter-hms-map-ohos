@@ -85,10 +85,9 @@ await controller.addMassPoints([
 
 `screenRadius` stays visually fixed while zooming. On HarmonyOS, mass points
 use the native `MassPointOverlay` and require API 20 or later. Calls on earlier
-API levels are ignored with a native log.
-Because Huawei Map Kit for Android has no matching overlay, Android draws all
-points in one shared, non-interactive view and reprojects them when the camera
-moves.
+API levels are ignored with a native log. Because Huawei Map Kit for Android
+has no matching overlay, Android renders all mass points in one native green
+HeatMap for maximum throughput. Android ignores individual mass-point colors.
 
 ## Draw on the map
 
