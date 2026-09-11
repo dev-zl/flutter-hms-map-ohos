@@ -39,7 +39,7 @@ import java.util.Set;
 final class MassPointMarkerOverlay {
     private static final String CENTER = "center";
     private static final String SCREEN_RADIUS = "screenRadius";
-    private static final int POINT_COLOR = 0xFF22C55E;
+    private static final String COLOR = "color";
     private static final int MAX_VISIBLE_MARKERS = 800;
     private static final int SAMPLE_COLUMNS = 32;
     private static final int SAMPLE_ROWS = 25;
@@ -49,18 +49,13 @@ final class MassPointMarkerOverlay {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final PointQuadTree spatialIndex = new PointQuadTree();
     private final Map<MassPoint, Marker> activeMarkers = new IdentityHashMap<>();
+    private final Map<String, PointIcon> pointIcons = new java.util.HashMap<>();
     private final ArrayDeque<Marker> markerPool = new ArrayDeque<>();
     private final List<List<?>> pendingBatches = new ArrayList<>();
     private final Runnable refreshMarkers = this::refreshVisibleMarkers;
 
     private HuaweiMap huaweiMap;
-    private BitmapDescriptor pointIcon;
-    private Bitmap pointIconBitmap;
-    private float pointIconAnchorV = 0.5f;
-    private double screenRadius = 1.0;
-    private double iconRadius = -1.0;
     private double verticalOffset;
-    private double iconVerticalOffset = -1.0;
     private boolean cameraMoving;
     private boolean disposed;
 
@@ -113,9 +108,13 @@ final class MassPointMarkerOverlay {
             return;
         }
 
-        ensurePointIcon();
         final Viewport viewport = Viewport.from(bounds, VIEWPORT_PADDING_RATIO);
         final List<MassPoint> desiredPoints = selectVisiblePoints(viewport);
+        for (Map.Entry<MassPoint, Marker> entry : activeMarkers.entrySet()) {
+            final PointIcon icon = getPointIcon(entry.getKey());
+            entry.getValue().setIcon(icon.descriptor);
+            entry.getValue().setMarkerAnchor(0.5f, icon.anchorV);
+        }
         final Set<MassPoint> desiredSet = Collections.newSetFromMap(new IdentityHashMap<>());
         desiredSet.addAll(desiredPoints);
 
@@ -138,11 +137,12 @@ final class MassPointMarkerOverlay {
                 continue;
             }
             final Marker marker;
+            final PointIcon icon = getPointIcon(point);
             if (markerPool.isEmpty()) {
                 marker = huaweiMap.addMarker(new MarkerOptions()
                     .position(new LatLng(point.latitude, point.longitude))
-                    .icon(pointIcon)
-                    .anchorMarker(0.5f, pointIconAnchorV)
+                    .icon(icon.descriptor)
+                    .anchorMarker(0.5f, icon.anchorV)
                     .clickable(false)
                     .draggable(false)
                     .flat(false)
@@ -151,8 +151,8 @@ final class MassPointMarkerOverlay {
             } else {
                 marker = markerPool.removeFirst();
                 marker.setPosition(new LatLng(point.latitude, point.longitude));
-                marker.setIcon(pointIcon);
-                marker.setMarkerAnchor(0.5f, pointIconAnchorV);
+                marker.setIcon(icon.descriptor);
+                marker.setMarkerAnchor(0.5f, icon.anchorV);
                 marker.setVisible(true);
             }
             activeMarkers.put(point, marker);
@@ -172,11 +172,7 @@ final class MassPointMarkerOverlay {
         }
         spatialIndex.clear();
         huaweiMap = null;
-        pointIcon = null;
-        if (pointIconBitmap != null) {
-            pointIconBitmap.recycle();
-            pointIconBitmap = null;
-        }
+        pointIcons.clear();
     }
 
     private void scheduleRefresh() {
@@ -226,8 +222,10 @@ final class MassPointMarkerOverlay {
                 || radius <= 0.0) {
                 continue;
             }
-            spatialIndex.add(new MassPoint(latitude, longitude));
-            screenRadius = Math.max(screenRadius, radius);
+            final Object colorValue = data.get(COLOR);
+            final int color = colorValue instanceof Number
+                ? ((Number) colorValue).intValue() : 0xFF22C55E;
+            spatialIndex.add(new MassPoint(latitude, longitude, radius, color));
             changed = true;
         }
         return changed;
@@ -264,43 +262,27 @@ final class MassPointMarkerOverlay {
         return sampled;
     }
 
-    private void ensurePointIcon() {
-        if (pointIcon != null
-            && iconRadius == screenRadius
-            && iconVerticalOffset == verticalOffset) {
-            return;
-        }
-        final int diameter = Math.max(2, (int) Math.ceil(screenRadius * 2.0 * density));
+    private PointIcon getPointIcon(MassPoint point) {
+        final String key = point.radius + ":" + point.color + ":" + verticalOffset;
+        final PointIcon cached = pointIcons.get(key);
+        if (cached != null) return cached;
+        final int diameter = Math.max(2, (int) Math.ceil(point.radius * 2.0 * density));
         final int offsetPixels = Math.max(0, (int) Math.round(verticalOffset * density));
         final int height = diameter + offsetPixels;
         final Bitmap bitmap = Bitmap.createBitmap(diameter, height, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(bitmap);
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(POINT_COLOR);
+        paint.setColor(point.color);
         paint.setStyle(Paint.Style.FILL);
         canvas.drawCircle(
             diameter * 0.5f,
             offsetPixels + diameter * 0.5f,
             diameter * 0.5f,
             paint);
-        pointIcon = BitmapDescriptorFactory.fromBitmap(bitmap);
-        iconRadius = screenRadius;
-        iconVerticalOffset = verticalOffset;
         final float anchorV = (diameter * 0.5f) / height;
-        pointIconAnchorV = anchorV;
-
-        for (Marker marker : activeMarkers.values()) {
-            marker.setIcon(pointIcon);
-            marker.setMarkerAnchor(0.5f, anchorV);
-        }
-        for (Marker marker : markerPool) {
-            marker.setIcon(pointIcon);
-            marker.setMarkerAnchor(0.5f, anchorV);
-        }
-        if (pointIconBitmap != null) {
-            pointIconBitmap.recycle();
-        }
-        pointIconBitmap = bitmap;
+        final PointIcon icon = new PointIcon(BitmapDescriptorFactory.fromBitmap(bitmap), anchorV);
+        pointIcons.put(key, icon);
+        return icon;
     }
 
     private static double normalizeLongitude(double longitude) {
@@ -311,11 +293,24 @@ final class MassPointMarkerOverlay {
         final double latitude;
         final double longitude;
         final double x;
+        final double radius;
+        final int color;
 
-        MassPoint(double latitude, double longitude) {
+        MassPoint(double latitude, double longitude, double radius, int color) {
             this.latitude = latitude;
             this.longitude = longitude;
+            this.radius = radius;
+            this.color = color;
             x = normalizeLongitude(longitude);
+        }
+    }
+
+    private static final class PointIcon {
+        final BitmapDescriptor descriptor;
+        final float anchorV;
+        PointIcon(BitmapDescriptor descriptor, float anchorV) {
+            this.descriptor = descriptor;
+            this.anchorV = anchorV;
         }
     }
 
