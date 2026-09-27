@@ -121,7 +121,7 @@ final class MarkerAppearance {
         float centerX = markerX + centerOffsetX;
         float centerY = markerY + centerOffsetY;
         float fromGroundY = centerY - groundOffset;
-        float contactDistance = markerRadius + dotSize / 2 - dotSize * .18f;
+        float contactDistance = markerRadius + dotSize / 2 - dotSize * .11f;
         // Derive one scale from the end position, then keep it unchanged for the
         // whole transition. This makes the marker travel on a horizontal line.
         float endpointX = Math.abs(centerOffsetX - offsetX) + (sway ? iconWidth * .9f : 0);
