@@ -37,6 +37,10 @@ import java.util.Map;
 
 public class MarkersUtils {
     private HuaweiMap huaweiMap;
+    private final float density;
+    private int panDirection = -1;
+    private float lastZoom = Float.NaN, lastBearing = Float.NaN, lastTilt = Float.NaN;
+    private final Map<LatLng, Float> groundOffsets = new HashMap<>();
 
     private final MethodChannel mChannel;
 
@@ -49,6 +53,7 @@ public class MarkersUtils {
     private final HMSLogger logger;
 
     public MarkersUtils(final MethodChannel mChannel, final Application application) {
+        density = application.getResources().getDisplayMetrics().density;
         idsOnMap = new HashMap<>();
         ids = new HashMap<>();
         this.mChannel = mChannel;
@@ -86,8 +91,11 @@ public class MarkersUtils {
         final Marker newMarker = huaweiMap.addMarker(options);
         logger.sendSingleEvent("addMarker");
 
-        final MarkerController controller = new MarkerController(newMarker, markerBuilder.isClusterable());
+        final MarkerController controller = new MarkerController(
+            newMarker, markerBuilder.isClusterable(), huaweiMap, density);
         controller.setAnimationSet(markerBuilder.getAnimationSet());
+        controller.configureAppearance(marker,
+            groundOffsets.getOrDefault(controller.position(), 0f), panDirection);
 
         idsOnMap.put(id, controller);
         ids.put(newMarker.getId(), id);
@@ -101,6 +109,8 @@ public class MarkersUtils {
         final MarkerController markerController = idsOnMap.get(markerId);
         if (markerController != null) {
             Convert.processMarkerOptions(marker, markerController, messenger);
+            markerController.configureAppearance(marker,
+                groundOffsets.getOrDefault(markerController.position(), 0f), panDirection);
         }
     }
 
@@ -266,6 +276,44 @@ public class MarkersUtils {
         final HashMap<String, Object> data = new HashMap<>();
         data.put(Param.MARKER_ID, markerId);
         return data;
+    }
+
+    public void setPanDirection(int direction) {
+        if (direction == panDirection || huaweiMap == null) return;
+        panDirection = direction;
+        com.huawei.hms.maps.model.LatLngBounds bounds =
+            huaweiMap.getProjection().getVisibleRegion().latLngBounds;
+        for (MarkerController controller : idsOnMap.values()) {
+            controller.pan(direction, bounds.contains(controller.position()));
+        }
+    }
+
+    public void setGroundPoints(List<?> points, float offset) {
+        if (points == null) return;
+        for (Object value : points) {
+            List<?> center = (List<?>) ((Map<?, ?>) value).get("center");
+            groundOffsets.put(new LatLng(
+                ((Number) center.get(0)).doubleValue(),
+                ((Number) center.get(1)).doubleValue()), offset);
+        }
+        for (MarkerController controller : idsOnMap.values()) {
+            controller.groundOffset(groundOffsets.getOrDefault(controller.position(), 0f));
+        }
+    }
+
+    public void updateAppearancePositions() {
+        if (huaweiMap == null) return;
+        com.huawei.hms.maps.model.CameraPosition camera = huaweiMap.getCameraPosition();
+        if (camera.zoom == lastZoom && camera.bearing == lastBearing && camera.tilt == lastTilt) return;
+        lastZoom = camera.zoom;
+        lastBearing = camera.bearing;
+        lastTilt = camera.tilt;
+        for (MarkerController controller : idsOnMap.values()) controller.updateAppearancePosition();
+    }
+
+    public void disposeAppearances() {
+        for (MarkerController controller : idsOnMap.values()) controller.disposeAppearance();
+        groundOffsets.clear();
     }
 
     public void startAnimation(final String id) {

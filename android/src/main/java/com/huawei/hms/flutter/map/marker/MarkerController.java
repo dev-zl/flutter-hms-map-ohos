@@ -24,19 +24,62 @@ import com.huawei.hms.maps.model.animation.AnimationSet;
 class MarkerController implements MarkerMethods {
 
     private final Marker marker;
+    private LatLng logicalPosition;
+    private MarkerAppearance appearance;
+    private final com.huawei.hms.maps.HuaweiMap map;
+    private final float density;
+
+    void configureAppearance(java.util.Map<?, ?> data, float groundOffset, int direction) {
+        if (MarkerAppearance.enabled(data)) {
+            if (appearance == null) {
+                appearance = new MarkerAppearance(map, marker, density, logicalPosition, data);
+            }
+            appearance.configure(data, logicalPosition, groundOffset, direction);
+        } else if (appearance != null) {
+            appearance.dispose();
+            appearance = null;
+            marker.setPosition(logicalPosition);
+        }
+    }
+
+    void pan(int direction, boolean animated) {
+        if (appearance != null) appearance.pan(direction, animated);
+    }
+
+    void groundOffset(float value) {
+        if (appearance != null) appearance.setGroundOffset(value);
+    }
+
+    void updateAppearancePosition() {
+        if (appearance != null) appearance.updatePositions();
+    }
+
+    LatLng position() { return logicalPosition; }
+
+    void disposeAppearance() {
+        if (appearance != null) {
+            appearance.dispose();
+            appearance = null;
+        }
+    }
 
     private final String mapMarkerId;
 
     private final boolean clusterable;
 
-    MarkerController(final Marker marker, final boolean clusterable) {
+    MarkerController(final Marker marker, final boolean clusterable,
+                     com.huawei.hms.maps.HuaweiMap map, float density) {
         this.marker = marker;
+        this.map = map;
+        this.density = density;
+        logicalPosition = marker.getPosition();
         mapMarkerId = marker.getId();
         this.clusterable = clusterable;
     }
 
     @Override
     public void delete() {
+        disposeAppearance();
         marker.remove();
     }
 
@@ -87,6 +130,7 @@ class MarkerController implements MarkerMethods {
 
     @Override
     public void setPosition(final LatLng position) {
+        logicalPosition = position;
         marker.setPosition(position);
     }
 

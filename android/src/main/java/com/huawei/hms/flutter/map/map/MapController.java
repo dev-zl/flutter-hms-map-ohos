@@ -180,7 +180,13 @@ final class MapController
         this.context = context;
         this.activityState = activityState;
         mapView = new MapView(mActivity, options);
-        mapContainer = new FrameLayout(mActivity);
+        mapContainer = new FrameLayout(mActivity) {
+            @Override
+            public boolean dispatchTouchEvent(MotionEvent event) {
+                observeMarkerPan(event);
+                return super.dispatchTouchEvent(event);
+            }
+        };
         mapContainer.addView(mapView, new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         compactness = context.getResources().getDisplayMetrics().density;
@@ -213,6 +219,26 @@ final class MapController
     @Override
     public View getView() {
         return mapContainer;
+    }
+
+    private float markerPanStartX, markerPanLastX;
+    private long markerPanLastTime;
+
+    private void observeMarkerPan(MotionEvent event) {
+        if (disposed || drawingTouchView.getVisibility() == View.VISIBLE || event.getPointerCount() != 1) return;
+        float x = event.getX() / compactness;
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            markerPanStartX = markerPanLastX = x;
+            markerPanLastTime = event.getEventTime();
+        } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+            long elapsed = Math.max(1, event.getEventTime() - markerPanLastTime);
+            float translation = (x - markerPanStartX) / 36;
+            float velocity = (x - markerPanLastX) * 1000 / elapsed / 220;
+            float factor = Math.abs(translation) > Math.abs(velocity) ? translation : velocity;
+            if (Math.abs(factor) > .12f) mapUtils.setMarkerPanDirection(factor > 0 ? -1 : 1);
+            markerPanLastX = x;
+            markerPanLastTime = event.getEventTime();
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -496,6 +522,8 @@ final class MapController
             }
             case Method.MASS_POINTS_ADD: {
                 final Number verticalOffset = call.argument(Param.VERTICAL_OFFSET);
+                mapUtils.setMarkerGroundPoints(call.argument(Param.MASS_POINTS),
+                    verticalOffset == null ? 0f : Math.max(0f, verticalOffset.floatValue()));
                 massPointMarkerOverlay.addMassPoints(
                     call.argument(Param.MASS_POINTS),
                     verticalOffset == null ? 0.0 : Math.max(0.0, verticalOffset.doubleValue()));
@@ -601,6 +629,7 @@ final class MapController
         drawingTouchView.setOnTouchListener(null);
         drawingPoints.clear();
         massPointMarkerOverlay.clear();
+        mapUtils.disposeMarkerAppearances();
         methodChannel.setMethodCallHandler(null);
         mapListenerHandler.setMapListener(null);
         getApplication().unregisterActivityLifecycleCallbacks(this);
@@ -1045,6 +1074,7 @@ final class MapController
         if (disposed || activity.hashCode() != getActivityHashCode()) {
             return;
         }
+        mapUtils.disposeMarkerAppearances();
         mapView.onDestroy();
     }
 

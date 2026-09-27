@@ -50,6 +50,11 @@ class MapUtils {
 
     private final MarkersUtils markersUtils;
 
+    void setMarkerPanDirection(int direction) { markersUtils.setPanDirection(direction); }
+    void setMarkerGroundPoints(List<?> points, float offset) { markersUtils.setGroundPoints(points, offset); }
+    void updateMarkerAppearancePositions() { markersUtils.updateAppearancePositions(); }
+    void disposeMarkerAppearances() { markersUtils.disposeAppearances(); }
+
     private final PolylineUtils polylineUtils;
 
     private final PolygonUtils polygonUtils;

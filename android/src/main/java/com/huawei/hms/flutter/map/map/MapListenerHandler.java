@@ -211,6 +211,7 @@ public class MapListenerHandler implements MapListener {
 
     @Override
     public void onCameraMove() {
+        mapUtils.updateMarkerAppearancePositions();
         if (!trackCameraPosition) {
             return;
         }
@@ -223,6 +224,7 @@ public class MapListenerHandler implements MapListener {
 
     @Override
     public void onCameraIdle() {
+        mapUtils.updateMarkerAppearancePositions();
         onCameraIdle.run();
         logger.startMethodExecutionTimer(Method.CAMERA_ON_IDLE);
         mChannel.invokeMethod(Method.CAMERA_ON_IDLE, Collections.singletonMap(Param.MAP, id));
