@@ -204,22 +204,24 @@ export class MarkerAppearance {
     // Match iOS's fixed-height horizontal switch. Lift both composed elements
     // by half a middle-dot diameter to leave a clear gap above the mass point.
     const markerTravel = shiftAmplitude;
+    const leftTravelExtra = dot && sway ? dotSize * 0.55 : 0;
     const verticalLift = dotSize / 2;
-    const centerX = dot ? this.direction * markerTravel - ox : shift + centerOffsetX;
+    const centerX = dot ? this.direction * markerTravel + Math.min(0, this.direction) * leftTravelExtra - ox
+      : shift + centerOffsetX;
     const centerY = dot ? -markerRadius - oy - verticalLift : centerOffsetY;
     const markerX = centerX - centerOffsetX;
     const markerY = centerY - centerOffsetY;
     const left = markerX - w * this.anchorX;
     const top = markerY - h * this.anchorY;
 
-    const dotY = -dotSize / 3 - verticalLift;
+    const dotY = -dotSize / 3 - verticalLift + 3 / this.density;
     const lineFraction = (this.groundOffset - dotY) / (this.groundOffset - centerY);
     const dotX = centerX * lineFraction;
     const bannerLeft = left - 4 - (1 - this.direction) / 2 * grow, bannerTop = top + (h - capsuleH) / 2;
     // Keep texture dimensions and anchor stable throughout each transition.
     const expanded = this.expansion > 0 || this.expansionTarget() > 0;
     const extra = expanded ? extension + 4 : 0;
-    const endpointCenterLeft = dot ? -markerTravel - ox : -shiftAmplitude + centerOffsetX;
+    const endpointCenterLeft = dot ? -markerTravel - leftTravelExtra - ox : -shiftAmplitude + centerOffsetX;
     const endpointCenterRight = dot ? markerTravel - ox : shiftAmplitude + centerOffsetX;
     const endpointMarkerLeft = endpointCenterLeft - centerOffsetX - w * this.anchorX;
     const endpointMarkerRight = endpointCenterRight - centerOffsetX - w * this.anchorX;
