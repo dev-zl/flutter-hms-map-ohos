@@ -204,7 +204,7 @@ export class MarkerAppearance {
     // Match iOS's fixed-height horizontal switch. Lift both composed elements
     // by half a middle-dot diameter to leave a clear gap above the mass point.
     const markerTravel = shiftAmplitude;
-    const leftTravelExtra = dot && sway ? dotSize * 0.55 : 0;
+    const leftTravelExtra = dot && sway ? dotSize * 0.2 : 0;
     const verticalLift = dotSize / 2;
     const centerX = dot ? this.direction * markerTravel + Math.min(0, this.direction) * leftTravelExtra - ox
       : shift + centerOffsetX;
@@ -214,7 +214,7 @@ export class MarkerAppearance {
     const left = markerX - w * this.anchorX;
     const top = markerY - h * this.anchorY;
 
-    const dotY = -dotSize / 3 - verticalLift + 3 / this.density;
+    const dotY = -dotSize / 3 - verticalLift + 4 / this.density;
     const lineFraction = (this.groundOffset - dotY) / (this.groundOffset - centerY);
     const dotX = centerX * lineFraction;
     const bannerLeft = left - 4 - (1 - this.direction) / 2 * grow, bannerTop = top + (h - capsuleH) / 2;
