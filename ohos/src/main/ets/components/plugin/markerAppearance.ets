@@ -184,7 +184,7 @@ export class MarkerAppearance {
     const ox = dot ? offset[0] : 0, oy = dot ? offset[1] : 0;
     const sway = this.flag('swayOnPan');
     const shiftAmplitude = sway
-      ? (dot ? w * 0.9 : Math.max(8, this.number('maxSwayDegrees', 24) * 0.55)) : 0;
+      ? (dot ? w * 0.46 : Math.max(8, this.number('maxSwayDegrees', 24) * 0.55)) : 0;
     const shift = this.direction * shiftAmplitude;
     const title = this.string('bannerTitle').toUpperCase(), subtitle = this.string('bannerSubtitle');
     const measure = new OffscreenCanvasRenderingContext2D(1, 1, new RenderingContextSettings(true), LengthMetricsUnit.PX);
@@ -201,25 +201,20 @@ export class MarkerAppearance {
     const centerOffsetX = contentLeft + contentWidth / 2 - this.anchorX * w;
     // The social marker's visible circle sits at the bottom of its bitmap.
     const centerOffsetY = contentTop + contentHeight - markerRadius - this.anchorY * h;
-    const contactDistance = markerRadius + dotSize / 2 - dotSize * 0.11;
-    // Use the visible circle's radius for the horizontal swing. The height is
-    // independent of that swing, so both sides form the same diagonal with the
-    // fixed mass point throughout the direction animation.
-    const markerTravel = dot ? Math.min(shiftAmplitude, markerRadius * 0.7) : shiftAmplitude;
-    const markerLift = markerRadius + dotSize / 2 + oy + 2;
+    // Match iOS's fixed-height horizontal switch. Lift both composed elements
+    // by half a middle-dot diameter to leave a clear gap above the mass point.
+    const markerTravel = shiftAmplitude;
+    const verticalLift = dotSize / 2;
     const centerX = dot ? this.direction * markerTravel - ox : shift + centerOffsetX;
-    const centerY = dot ? this.groundOffset - markerLift : centerOffsetY;
+    const centerY = dot ? -markerRadius - oy - verticalLift : centerOffsetY;
     const markerX = centerX - centerOffsetX;
     const markerY = centerY - centerOffsetY;
     const left = markerX - w * this.anchorX;
     const top = markerY - h * this.anchorY;
 
-    const centerToGround = Math.hypot(centerX, this.groundOffset - centerY);
-    const contactFraction = centerToGround > 0
-      ? Math.min(1, contactDistance / centerToGround) : 0;
-    const dotX = centerX * (1 - contactFraction);
-    const dotY = centerY + (this.groundOffset - centerY) * contactFraction;
-    const lineFraction = 1 - contactFraction;
+    const dotY = -dotSize / 3 - verticalLift;
+    const lineFraction = (this.groundOffset - dotY) / (this.groundOffset - centerY);
+    const dotX = centerX * lineFraction;
     const bannerLeft = left - 4 - (1 - this.direction) / 2 * grow, bannerTop = top + (h - capsuleH) / 2;
     // Keep texture dimensions and anchor stable throughout each transition.
     const expanded = this.expansion > 0 || this.expansionTarget() > 0;
@@ -260,7 +255,9 @@ export class MarkerAppearance {
     try {
       await this.marker.setIcon(frame);
       if (this.disposed) { await frame.release(); return; }
-      this.marker.setMarkerAnchor(-minX * this.density / pixelW, -minY * this.density / pixelH);
+      const anchorBiasX = dot ? markerRadius * 0.4 : 0;
+      this.marker.setMarkerAnchor((-minX + anchorBiasX) * this.density / pixelW,
+        -minY * this.density / pixelH);
       const old = this.lastFrame; this.lastFrame = frame;
       if (old) await old.release();
     } catch (error) { await frame.release(); throw new Error(String(error)); }
