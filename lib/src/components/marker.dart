@@ -90,6 +90,20 @@ class Marker {
   /// Animations.
   final List<dynamic> animationSet;
 
+  /// Native marker motion, positioning dot and expandable text capsule.
+  final String? bannerTitle;
+  final String? bannerSubtitle;
+  final int? bannerColor;
+  final bool bannerExpanded;
+  final bool popOnAppear;
+  final bool swayOnPan;
+  final double maxSwayDegrees;
+  final int popDurationMs;
+  final bool showAnchorDot;
+  final double anchorDotSize;
+  final int? anchorDotColor;
+  final Offset anchorDotOffset;
+
   /// Creates a [Marker] object.
   const Marker({
     required this.markerId,
@@ -110,6 +124,18 @@ class Marker {
     this.onDragStart,
     this.onDrag,
     this.animationSet = const <dynamic>[],
+    this.bannerTitle,
+    this.bannerSubtitle,
+    this.bannerColor,
+    this.bannerExpanded = false,
+    this.popOnAppear = false,
+    this.swayOnPan = false,
+    this.maxSwayDegrees = 24,
+    this.popDurationMs = 280,
+    this.showAnchorDot = false,
+    this.anchorDotSize = 8,
+    this.anchorDotColor,
+    this.anchorDotOffset = Offset.zero,
   });
 
   /// Copies a [Marker] object and updates the specified attributes.
@@ -131,6 +157,18 @@ class Marker {
     ValueChanged<LatLng>? onDragStart,
     ValueChanged<LatLng>? onDrag,
     List<dynamic>? animations,
+    String? bannerTitle,
+    String? bannerSubtitle,
+    int? bannerColor,
+    bool? bannerExpanded,
+    bool? popOnAppear,
+    bool? swayOnPan,
+    double? maxSwayDegrees,
+    int? popDurationMs,
+    bool? showAnchorDot,
+    double? anchorDotSize,
+    int? anchorDotColor,
+    Offset? anchorDotOffset,
   }) {
     return Marker(
       markerId: markerId,
@@ -151,6 +189,18 @@ class Marker {
       onDragStart: onDragStart ?? this.onDragStart,
       onDrag: onDrag ?? this.onDrag,
       animationSet: animations ?? animationSet,
+      bannerTitle: bannerTitle ?? this.bannerTitle,
+      bannerSubtitle: bannerSubtitle ?? this.bannerSubtitle,
+      bannerColor: bannerColor ?? this.bannerColor,
+      bannerExpanded: bannerExpanded ?? this.bannerExpanded,
+      popOnAppear: popOnAppear ?? this.popOnAppear,
+      swayOnPan: swayOnPan ?? this.swayOnPan,
+      maxSwayDegrees: maxSwayDegrees ?? this.maxSwayDegrees,
+      popDurationMs: popDurationMs ?? this.popDurationMs,
+      showAnchorDot: showAnchorDot ?? this.showAnchorDot,
+      anchorDotSize: anchorDotSize ?? this.anchorDotSize,
+      anchorDotColor: anchorDotColor ?? this.anchorDotColor,
+      anchorDotOffset: anchorDotOffset ?? this.anchorDotOffset,
     );
   }
 
@@ -179,6 +229,18 @@ class Marker {
         clickable == other.clickable &&
         clusterable == other.clusterable &&
         listEquals(animationSet, other.animationSet) &&
+        bannerTitle == other.bannerTitle &&
+        bannerSubtitle == other.bannerSubtitle &&
+        bannerColor == other.bannerColor &&
+        bannerExpanded == other.bannerExpanded &&
+        popOnAppear == other.popOnAppear &&
+        swayOnPan == other.swayOnPan &&
+        maxSwayDegrees == other.maxSwayDegrees &&
+        popDurationMs == other.popDurationMs &&
+        showAnchorDot == other.showAnchorDot &&
+        anchorDotSize == other.anchorDotSize &&
+        anchorDotColor == other.anchorDotColor &&
+        anchorDotOffset == other.anchorDotOffset &&
         zIndex == other.zIndex;
   }
 

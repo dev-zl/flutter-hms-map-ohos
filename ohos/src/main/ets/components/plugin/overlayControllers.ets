@@ -20,6 +20,7 @@ import { common } from '@kit.AbilityKit';
 import { image } from '@kit.ImageKit';
 
 import { Param } from './constants/Param';
+import { MarkerAppearance } from './markerAppearance';
 import { Convert } from './utils/Convert';
 import { AnimationConvert } from './animationAnimationConvert';
 
@@ -57,6 +58,26 @@ async function resolveIcon(
 
 export class MarkerController {
   private marker: map.Marker;
+  private appearance: MarkerAppearance | null = null;
+  private groundOffset: number = 0;
+  private direction: number = -1;
+  private deleted: boolean = false;
+  private iconRevision: number = 0;
+
+  configureAppearance(data: Record<string, Object>, groundOffset: number, direction: number): void {
+    this.groundOffset = groundOffset; this.direction = direction;
+    if (MarkerAppearance.enabled(data)) {
+      if (!this.appearance) this.appearance = new MarkerAppearance(this.marker);
+      this.appearance.configure(data, groundOffset, direction).catch((error: Error) => {
+        hilog.warn(0, TAG, `marker appearance failed: ${error.message}`);
+      });
+    } else if (this.appearance) {
+      this.appearance.dispose(); this.appearance = null;
+    }
+  }
+  pan(direction: number, animated: boolean = true): void { this.direction = direction; this.appearance?.pan(direction, animated); }
+  setGroundOffset(value: number): void { this.groundOffset = value; this.appearance?.setGroundOffset(value); }
+
   private ctx: common.UIAbilityContext | null;
   private assetPathResolver: ((name: string, pkg?: string) => string) | null;
 
@@ -71,20 +92,23 @@ export class MarkerController {
   }
 
   delete(): void {
+    this.deleted = true; this.iconRevision++; this.appearance?.dispose(); this.appearance = null;
     try { this.marker.remove(); } catch (e) { hilog.warn(0x0000, TAG, `marker.remove failed: ${e}`); }
   }
 
   update(data: Record<string, Object>): void {
     if (data[Param.ALPHA] !== undefined) this.marker.setAlpha(data[Param.ALPHA] as number);
-    if (data[Param.ANCHOR] !== undefined) {
+    if (data[Param.ANCHOR] !== undefined && !MarkerAppearance.enabled(data)) {
       const a = data[Param.ANCHOR] as Array<number>;
       if (Array.isArray(a)) this.marker.setMarkerAnchor(a[0], a[1]);
     }
     if (data[Param.CLICKABLE] !== undefined) this.marker.setClickable(data[Param.CLICKABLE] as boolean);
     if (data[Param.DRAGGABLE] !== undefined) this.marker.setDraggable(data[Param.DRAGGABLE] as boolean);
     if (data[Param.FLAT] !== undefined) this.marker.setFlat(data[Param.FLAT] as boolean);
-    if (data[Param.ICON] !== undefined) {
+    if (data[Param.ICON] !== undefined && !MarkerAppearance.enabled(data)) {
+      const revision = ++this.iconRevision;
       resolveIcon(data[Param.ICON], this.ctx, this.assetPathResolver).then((pixelMap) => {
+        if (pixelMap && (this.deleted || revision !== this.iconRevision)) { pixelMap.release().catch(() => {}); return; }
         if (pixelMap) {
           this.marker.setIcon(pixelMap).catch((e: Error) => {
             hilog.warn(0x0000, TAG, `marker.setIcon failed: ${e.message}`);
@@ -111,6 +135,10 @@ export class MarkerController {
     }
     if (data[Param.VISIBLE] !== undefined) this.marker.setVisible(data[Param.VISIBLE] as boolean);
     if (data[Param.Z_INDEX] !== undefined) this.marker.setZIndex(data[Param.Z_INDEX] as number);
+    if (data['appearance'] !== undefined) {
+      if (MarkerAppearance.enabled(data)) this.iconRevision++;
+      this.configureAppearance(data, this.groundOffset, this.direction);
+    }
     if (data[Param.ANIMATION] !== undefined) {
       // Dart sends a JSON STRING here (see lib/src/utils/to_json.dart animationSetToJson).
       const anim = AnimationConvert.decodeAnimationString(data[Param.ANIMATION]);

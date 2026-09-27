@@ -96,6 +96,19 @@ export class MapUtils implements MethodCallHandler {
   private methodChannel: MethodChannel | null = null;
 
   private markerControllers: Map<string, MarkerController> = new Map();
+  private markerPanDirection: number = -1;
+  private markerGroundOffsets: Map<string, number> = new Map();
+
+  setMarkerPanDirection(direction: number): void {
+    if (direction === this.markerPanDirection) return;
+    this.markerPanDirection = direction;
+    const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
+    this.markerControllers.forEach((controller: MarkerController) => {
+      controller.pan(direction, bounds ? map.LatLngBoundsUtils.contains(bounds, controller.getPosition()) : false);
+    });
+  }
+  private groundKey(position: mapCommon.LatLng): string { return `${position.latitude}:${position.longitude}`; }
+
   private polylineControllers: Map<string, PolylineController> = new Map();
   private polygonControllers: Map<string, PolygonController> = new Map();
   private circleControllers: Map<string, CircleController> = new Map();
@@ -199,6 +212,13 @@ export class MapUtils implements MethodCallHandler {
       return;
     }
 
+    (rawPoints as Array<Object>).forEach((value: Object) => {
+      const point = value as Record<string, Object>;
+      this.markerGroundOffsets.set(this.groundKey(Convert.toLatLng(point[Param.CENTER])), verticalOffset);
+    });
+    this.markerControllers.forEach((controller: MarkerController) => {
+      controller.setGroundOffset(this.markerGroundOffsets.get(this.groundKey(controller.getPosition())) ?? 0);
+    });
     const groupsByStyle: Map<string, MassPointGroup> = new Map();
     (rawPoints as Array<Object>).forEach((rawPoint: Object) => {
       const point = rawPoint as Record<string, Object>;
@@ -367,6 +387,7 @@ export class MapUtils implements MethodCallHandler {
         const ctrl = this.markerControllers.get(dartId);
         if (ctrl) {
           ctrl.update(item);
+          ctrl.setGroundOffset(this.markerGroundOffsets.get(this.groundKey(ctrl.getPosition())) ?? 0);
           if (item[Param.CLUSTERABLE] !== undefined) {
             const clusterable = item[Param.CLUSTERABLE] as boolean;
             if (clusterable) {
@@ -648,6 +669,8 @@ export class MapUtils implements MethodCallHandler {
   // ====================== Add helpers ======================
 
   private async addMarker(data: Record<string, Object>): Promise<void> {
+    const controller = this.mapController;
+    if (!controller) return;
     try {
       const dartId = (data[Param.MARKER_ID] as string) ?? '';
       hilog.info(0x0000, TAG, `addMarker start ${describeMarker(data)}`);
@@ -686,9 +709,14 @@ export class MapUtils implements MethodCallHandler {
         `addMarker calling MapKit dartId=${dartId} position=${JSON.stringify(opts.position)} ` +
         `hasIcon=${opts.icon !== undefined} clickable=${String(opts.clickable)} visible=${String(opts.visible)}`
       );
-      const marker = await this.mapController!.addMarker(opts);
+      if (controller !== this.mapController) return;
+      const marker = await controller.addMarker(opts);
+      if (controller !== this.mapController) { marker.remove(); return; }
       const id = dartId.length > 0 ? dartId : (marker.getId() ?? `m_${Date.now()}`);
-      this.markerControllers.set(id, new MarkerController(marker, this.context, this.assetResolver));
+      const markerController = new MarkerController(marker, this.context, this.assetResolver);
+      this.markerControllers.set(id, markerController);
+      markerController.configureAppearance(data,
+        this.markerGroundOffsets.get(this.groundKey(opts.position)) ?? 0, this.markerPanDirection);
       const nativeId = marker.getId() ?? '';
       if (nativeId) this.nativeToDartId.set(nativeId, id);
       hilog.info(
@@ -991,6 +1019,7 @@ export class MapUtils implements MethodCallHandler {
     this.heatMapControllers.forEach(c => c.delete());
 
     this.markerControllers.clear();
+    this.markerGroundOffsets.clear();
     this.polylineControllers.clear();
     this.polygonControllers.clear();
     this.circleControllers.clear();

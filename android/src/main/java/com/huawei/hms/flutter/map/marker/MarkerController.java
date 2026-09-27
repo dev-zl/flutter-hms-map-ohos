@@ -26,6 +26,7 @@ class MarkerController implements MarkerMethods {
     private final Marker marker;
     private LatLng logicalPosition;
     private MarkerAppearance appearance;
+    private MarkerBanner banner;
     private final com.huawei.hms.maps.HuaweiMap map;
     private final float density;
 
@@ -40,10 +41,18 @@ class MarkerController implements MarkerMethods {
             appearance = null;
             marker.setPosition(logicalPosition);
         }
+        if (MarkerBanner.enabled(data)) {
+            if (banner == null) banner = new MarkerBanner(map, marker, density);
+            banner.configure(data, direction);
+        } else if (banner != null) {
+            banner.dispose();
+            banner = null;
+        }
     }
 
     void pan(int direction, boolean animated) {
         if (appearance != null) appearance.pan(direction, animated);
+        if (banner != null) banner.pan(direction, animated);
     }
 
     void groundOffset(float value) {
@@ -52,6 +61,7 @@ class MarkerController implements MarkerMethods {
 
     void updateAppearancePosition() {
         if (appearance != null) appearance.updatePositions();
+        if (banner != null) banner.updatePosition();
     }
 
     LatLng position() { return logicalPosition; }
@@ -60,6 +70,10 @@ class MarkerController implements MarkerMethods {
         if (appearance != null) {
             appearance.dispose();
             appearance = null;
+        }
+        if (banner != null) {
+            banner.dispose();
+            banner = null;
         }
     }
 

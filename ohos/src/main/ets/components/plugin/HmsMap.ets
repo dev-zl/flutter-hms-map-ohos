@@ -45,6 +45,26 @@ export class HmsMap extends PlatformView {
   private lastDrawingPoint: mapCommon.MapPoint | null = null;
   private activeTouchId: number | null = null;
   private uiContext: UIContext | null = null;
+  private panListener: ((direction: number) => void) | null = null;
+  private panStartX: number = 0;
+  private panLastX: number = 0;
+  private panLastTime: number = 0;
+  setMarkerPanListener(listener: (direction: number) => void): void { this.panListener = listener; }
+
+  private observeMarkerPan(event: TouchEvent): void {
+    if (event.touches.length !== 1) return;
+    const x = event.touches[0].x, time = Date.now();
+    if (event.type === TouchType.Down) {
+      this.panStartX = this.panLastX = x; this.panLastTime = time;
+    } else if (event.type === TouchType.Move) {
+      const translation = (x - this.panStartX) / 36;
+      const velocity = (x - this.panLastX) * 1000 / Math.max(1, time - this.panLastTime) / 220;
+      const factor = Math.abs(translation) > Math.abs(velocity) ? translation : velocity;
+      if (Math.abs(factor) > 0.12) this.panListener?.(factor > 0 ? -1 : 1);
+      this.panLastX = x; this.panLastTime = time;
+    }
+  }
+
 
   constructor(mapOptions: mapCommon.MapOptions, drawingEnabled: boolean) {
     super();
@@ -124,7 +144,7 @@ export class HmsMap extends PlatformView {
   }
 
   handleTouch(event: TouchEvent, uiContext: UIContext): void {
-    if (!this.drawingEnabled) return;
+    if (!this.drawingEnabled) { this.observeMarkerPan(event); return; }
 
     try { event.preventDefault(); } catch (e) { /* MapComponent may not expose a default action. */ }
     event.stopPropagation();
@@ -240,6 +260,7 @@ export class HmsMap extends PlatformView {
     this.mapController = null;
     this.methodChannel = null;
     this.uiContext = null;
+    this.panListener = null;
     this.drawingPoints = [];
     this.activeTouchId = null;
     hilog.info(0x0000, TAG, 'HmsMap disposed');

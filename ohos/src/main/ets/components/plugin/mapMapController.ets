@@ -63,6 +63,7 @@ export class MapController implements MethodCallHandler {
     this.mapUtils = new MapUtils();
     this.mapUtils.setContext(context);
     this.mapUtils.setAssetResolver(assetResolver);
+    this.hmsMap.setMarkerPanListener((direction: number) => this.mapUtils.setMarkerPanDirection(direction));
     hilog.info(0x0000, TAG, `MapController created with id=${id}`);
   }
 

@@ -65,6 +65,20 @@ Map<String, dynamic> markerToJson(Marker marker) {
   addToJson(json, _Param.zIndex, marker.zIndex);
   addToJson(json, _Param.clusterable, marker.clusterable);
   addToJson(json, _Param.animation, animationSetToJson(marker.animationSet));
+  json['appearance'] = <String, dynamic>{
+    'bannerTitle': marker.bannerTitle,
+    'bannerSubtitle': marker.bannerSubtitle,
+    'bannerColor': marker.bannerColor,
+    'bannerExpanded': marker.bannerExpanded,
+    'popOnAppear': marker.popOnAppear,
+    'swayOnPan': marker.swayOnPan,
+    'maxSwayDegrees': marker.maxSwayDegrees,
+    'popDurationMs': marker.popDurationMs,
+    'showAnchorDot': marker.showAnchorDot,
+    'anchorDotSize': marker.anchorDotSize,
+    'anchorDotColor': marker.anchorDotColor,
+    'anchorDotOffset': offsetToJson(marker.anchorDotOffset),
+  };
 
   return json;
 }
