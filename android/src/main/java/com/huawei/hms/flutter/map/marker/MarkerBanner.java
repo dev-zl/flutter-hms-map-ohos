@@ -17,6 +17,7 @@ import com.huawei.hms.maps.model.BitmapDescriptorFactory;
 import com.huawei.hms.maps.model.LatLng;
 import com.huawei.hms.maps.model.Marker;
 import com.huawei.hms.maps.model.MarkerOptions;
+import com.huawei.hms.maps.model.animation.AlphaAnimation;
 import com.huawei.hms.maps.model.animation.Animation;
 import com.huawei.hms.maps.model.animation.ScaleAnimation;
 
@@ -33,8 +34,9 @@ final class MarkerBanner {
     private static final float MAX_BITMAP_WIDTH_PX = 576;
     private static final float HORIZONTAL_PADDING = 12;
     private static final float MARKER_MARGIN_PX = 4;
-    private static final float EXTRA_WIDTH_PX = 20;
-    private static final float EXTRA_HEIGHT_PX = 10;
+    private static final float EXTRA_WIDTH_PX = 30;
+    private static final float RIGHT_EXTRA_WIDTH_PX = 20;
+    private static final float EXTRA_HEIGHT_PX = 20;
     private static final float TEXT_GAP = 6;
     private static final float VERTICAL_LIFT = 2;
 
@@ -137,8 +139,8 @@ final class MarkerBanner {
 
         if (expanded && marker.isVisible()) {
             if (animated) {
-                animateScale(outgoing, 1, 0, DIRECTION_DURATION, true);
-                animateScale(incoming, 0, 1, DIRECTION_DURATION, false);
+                animateDirection(outgoing, false);
+                animateDirection(incoming, true);
             } else {
                 outgoing.setVisible(false);
                 incoming.setVisible(true);
@@ -187,7 +189,7 @@ final class MarkerBanner {
             - markerMargin - iconWidth - TEXT_GAP - HORIZONTAL_PADDING;
         float textWidth = Math.min(Math.max(0, availableTextWidth),
             Math.min(MAX_TEXT_WIDTH, Math.max(40, Math.max(titleWidth, subtitleWidth))))
-            + EXTRA_WIDTH_PX / density;
+            + (EXTRA_WIDTH_PX + (toRight ? RIGHT_EXTRA_WIDTH_PX : 0)) / density;
         float titleHeight = title.isEmpty() ? 0 : 14;
         float subtitleHeight = subtitle.isEmpty() ? 0 : 16;
         float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 : 0) + subtitleHeight;
@@ -220,7 +222,8 @@ final class MarkerBanner {
 
         return new BannerBitmap(bitmap,
             (markerX + anchorX * iconWidth) / width,
-            ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight + VERTICAL_LIFT)
+            ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight
+                + VERTICAL_LIFT + 10 / density)
                 / capsuleHeight);
     }
 
@@ -281,6 +284,24 @@ final class MarkerBanner {
                     if (!expanded || target != banner(direction)) {
                         target.setVisible(false);
                     }
+                }
+            });
+        }
+        target.setAnimation(animation);
+        target.startAnimation();
+    }
+
+    private void animateDirection(Marker target, boolean showing) {
+        target.setVisible(true);
+        AlphaAnimation animation = new AlphaAnimation(showing ? 0 : 1, showing ? 1 : 0);
+        animation.setDuration(DIRECTION_DURATION);
+        animation.setInterpolator(new AccelerateDecelerateInterpolator());
+        animation.setFillMode(Animation.FILL_MODE_FORWARDS);
+        if (!showing) {
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override public void onAnimationStart() { }
+                @Override public void onAnimationEnd() {
+                    if (target != banner(direction)) target.setVisible(false);
                 }
             });
         }
