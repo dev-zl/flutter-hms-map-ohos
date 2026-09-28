@@ -42,6 +42,7 @@ final class MarkerBanner {
     private static final float EXTRA_HEIGHT_PX = 32;
     private static final float TEXT_GAP = 6;
     private static final int BANNER_VERTICAL_OFFSET_PX = 21;
+    private static final int LEFT_CAP_ALIGNMENT_PX = 12;
     private static final int RIGHT_CAP_ALIGNMENT_PX = 44;
 
     private final HuaweiMap map;
@@ -308,7 +309,8 @@ final class MarkerBanner {
         Point base = projection.toScreenLocation(position);
         int bannerY = base.y - BANNER_VERTICAL_OFFSET_PX;
         if (!switching) {
-            leftBanner.setPosition(projection.fromScreenLocation(new Point(base.x, bannerY)));
+            leftBanner.setPosition(projection.fromScreenLocation(new Point(
+                base.x - LEFT_CAP_ALIGNMENT_PX, bannerY)));
             rightBanner.setPosition(projection.fromScreenLocation(new Point(
                 base.x - RIGHT_CAP_ALIGNMENT_PX, bannerY)));
             return;
@@ -317,10 +319,10 @@ final class MarkerBanner {
         int side = direction > 0 ? 1 : -1;
         banner(previousDirection).setPosition(projection.fromScreenLocation(new Point(
             Math.round(base.x + side * distance * switchProgress)
-                - (previousDirection > 0 ? RIGHT_CAP_ALIGNMENT_PX : 0), bannerY)));
+                - (previousDirection > 0 ? RIGHT_CAP_ALIGNMENT_PX : LEFT_CAP_ALIGNMENT_PX), bannerY)));
         banner(direction).setPosition(projection.fromScreenLocation(new Point(
             Math.round(base.x - side * distance * (1 - switchProgress))
-                - (direction > 0 ? RIGHT_CAP_ALIGNMENT_PX : 0), bannerY)));
+                - (direction > 0 ? RIGHT_CAP_ALIGNMENT_PX : LEFT_CAP_ALIGNMENT_PX), bannerY)));
     }
 
     private void animateScale(Marker target, float fromX, float toX, long duration,
