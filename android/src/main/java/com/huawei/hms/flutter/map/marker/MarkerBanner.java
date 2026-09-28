@@ -26,11 +26,15 @@ import java.util.Map;
 
 /** A native banner rendered below the business marker without changing its bitmap. */
 final class MarkerBanner {
-    private static final long ANIMATION_DURATION = 450;
-    private static final float MAX_TEXT_WIDTH = 150;
+    private static final long EXPAND_DURATION = 340;
+    private static final long COLLAPSE_DURATION = 240;
+    private static final long DIRECTION_DURATION = 450;
+    private static final float MAX_TEXT_WIDTH = 120;
+    private static final float MAX_BITMAP_WIDTH_PX = 576;
     private static final float HORIZONTAL_PADDING = 12;
-    private static final float MARKER_INSET = 4;
+    private static final float MARKER_MARGIN_PX = 4;
     private static final float TEXT_GAP = 6;
+    private static final float VERTICAL_LIFT = 2;
 
     private final HuaweiMap map;
     private final Marker marker;
@@ -112,8 +116,11 @@ final class MarkerBanner {
             configured = true;
         } else if (shouldExpand != expanded) {
             expanded = shouldExpand;
-            if (expanded) animateScale(banner(direction), 0, 1, false);
-            else animateScale(banner(direction), 1, 0, true);
+            if (expanded) {
+                animateScale(banner(direction), 0, 1, EXPAND_DURATION, false);
+            } else {
+                animateScale(banner(direction), 1, 0, COLLAPSE_DURATION, true);
+            }
         } else {
             banner(direction).setVisible(expanded && marker.isVisible());
             otherBanner(direction).setVisible(false);
@@ -128,8 +135,8 @@ final class MarkerBanner {
 
         if (expanded && marker.isVisible()) {
             if (animated) {
-                animateScale(outgoing, 1, 0, true);
-                animateScale(incoming, 0, 1, false);
+                animateScale(outgoing, 1, 0, DIRECTION_DURATION, true);
+                animateScale(incoming, 0, 1, DIRECTION_DURATION, false);
             } else {
                 outgoing.setVisible(false);
                 incoming.setVisible(true);
@@ -169,17 +176,21 @@ final class MarkerBanner {
     }
 
     private BannerBitmap drawBanner(boolean toRight) {
+        float markerMargin = MARKER_MARGIN_PX / density;
         TextPaint titlePaint = textPaint(10, true);
         TextPaint subtitlePaint = textPaint(12, false);
         float titleWidth = title.isEmpty() ? 0 : titlePaint.measureText(title);
         float subtitleWidth = subtitle.isEmpty() ? 0 : subtitlePaint.measureText(subtitle);
-        float textWidth = Math.min(MAX_TEXT_WIDTH, Math.max(40, Math.max(titleWidth, subtitleWidth)));
+        float availableTextWidth = MAX_BITMAP_WIDTH_PX / density
+            - markerMargin - iconWidth - TEXT_GAP - HORIZONTAL_PADDING;
+        float textWidth = Math.min(Math.max(0, availableTextWidth),
+            Math.min(MAX_TEXT_WIDTH, Math.max(40, Math.max(titleWidth, subtitleWidth))));
         float titleHeight = title.isEmpty() ? 0 : 14;
         float subtitleHeight = subtitle.isEmpty() ? 0 : 16;
         float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 : 0) + subtitleHeight;
         textHeight = Math.max(textHeight, 20);
         float capsuleHeight = Math.max(iconHeight + 4, 56);
-        float width = MARKER_INSET + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
+        float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
         int bitmapWidth = Math.max(1, Math.round(width * density));
         int bitmapHeight = Math.max(1, Math.round(capsuleHeight * density));
         Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
@@ -191,8 +202,8 @@ final class MarkerBanner {
         canvas.drawRoundRect(new RectF(0, 0, width, capsuleHeight),
             capsuleHeight / 2, capsuleHeight / 2, background);
 
-        float markerOriginX = toRight ? MARKER_INSET : width - MARKER_INSET - iconWidth;
-        float textX = toRight ? markerOriginX + iconWidth + TEXT_GAP : HORIZONTAL_PADDING;
+        float markerX = toRight ? markerMargin : HORIZONTAL_PADDING + textWidth + TEXT_GAP;
+        float textX = toRight ? markerX + iconWidth + TEXT_GAP : HORIZONTAL_PADDING;
         float textTop = (capsuleHeight - textHeight) / 2;
         if (!title.isEmpty()) {
             String line = ellipsize(title, titlePaint, textWidth);
@@ -204,10 +215,10 @@ final class MarkerBanner {
             canvas.drawText(line, textX, textTop - subtitlePaint.ascent(), subtitlePaint);
         }
 
-        float markerOriginY = (capsuleHeight - iconHeight) / 2;
         return new BannerBitmap(bitmap,
-            (markerOriginX + iconWidth * anchorX) / width,
-            (markerOriginY + iconHeight * anchorY) / capsuleHeight);
+            (markerX + anchorX * iconWidth) / width,
+            ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight + VERTICAL_LIFT)
+                / capsuleHeight);
     }
 
     private TextPaint textPaint(float size, boolean bold) {
@@ -223,7 +234,7 @@ final class MarkerBanner {
     }
 
     private void syncMarkerProperties() {
-        float zIndex = marker.getZIndex() - .02f;
+        float zIndex = marker.getZIndex() - .01f;
         leftBanner.setZIndex(zIndex);
         rightBanner.setZIndex(zIndex);
         leftBanner.setAlpha(marker.getAlpha());
@@ -247,23 +258,26 @@ final class MarkerBanner {
             return;
         }
         positionAnimator = ValueAnimator.ofFloat(0, 1);
-        positionAnimator.setDuration(ANIMATION_DURATION);
+        positionAnimator.setDuration(DIRECTION_DURATION);
         positionAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
         positionAnimator.addUpdateListener(value -> updatePositions());
         positionAnimator.start();
     }
 
-    private void animateScale(Marker target, float from, float to, boolean hideAtEnd) {
+    private void animateScale(Marker target, float fromX, float toX, long duration,
+                              boolean hideAtEnd) {
         target.setVisible(marker.isVisible());
-        ScaleAnimation animation = new ScaleAnimation(from, to, 1, 1);
-        animation.setDuration(ANIMATION_DURATION);
+        ScaleAnimation animation = new ScaleAnimation(fromX, toX, 1, 1);
+        animation.setDuration(duration);
         animation.setInterpolator(new AccelerateDecelerateInterpolator());
         animation.setFillMode(Animation.FILL_MODE_FORWARDS);
         if (hideAtEnd) {
             animation.setAnimationListener(new Animation.AnimationListener() {
                 @Override public void onAnimationStart() { }
                 @Override public void onAnimationEnd() {
-                    if (!expanded || target != banner(direction)) target.setVisible(false);
+                    if (!expanded || target != banner(direction)) {
+                        target.setVisible(false);
+                    }
                 }
             });
         }
