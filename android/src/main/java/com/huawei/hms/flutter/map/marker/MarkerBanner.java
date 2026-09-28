@@ -39,9 +39,10 @@ final class MarkerBanner {
     private static final float MARKER_MARGIN_PX = 4;
     private static final float EXTRA_WIDTH_PX = 30;
     private static final float RIGHT_EXTRA_WIDTH_PX = 20;
-    private static final float EXTRA_HEIGHT_PX = 20;
+    private static final float EXTRA_HEIGHT_PX = 32;
     private static final float TEXT_GAP = 6;
-    private static final float VERTICAL_LIFT = 2;
+    private static final int BANNER_VERTICAL_OFFSET_PX = 21;
+    private static final int RIGHT_CAP_ALIGNMENT_PX = 44;
 
     private final HuaweiMap map;
     private final Marker marker;
@@ -216,8 +217,8 @@ final class MarkerBanner {
         leftBanner.setMarkerAnchor(left.anchorX, left.anchorY);
         rightBanner.setIcon(BitmapDescriptorFactory.fromBitmap(right.bitmap));
         rightBanner.setMarkerAnchor(right.anchorX, right.anchorY);
-        leftWidthPx = left.bitmap.getWidth();
-        rightWidthPx = right.bitmap.getWidth();
+        leftWidthPx = left.capsuleWidthPx;
+        rightWidthPx = right.capsuleWidthPx;
     }
 
     private BannerBitmap drawBanner(boolean toRight) {
@@ -237,7 +238,9 @@ final class MarkerBanner {
         textHeight = Math.max(textHeight, 20);
         float capsuleHeight = Math.max(iconHeight + 4, 56) + EXTRA_HEIGHT_PX / density;
         float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
-        int bitmapWidth = Math.max(1, Math.round(width * density));
+        float bitmapWidthDp = width + (toRight ? 0 : RIGHT_EXTRA_WIDTH_PX / density);
+        float startX = bitmapWidthDp - width;
+        int bitmapWidth = Math.max(1, Math.round(bitmapWidthDp * density));
         int bitmapHeight = Math.max(1, Math.round(capsuleHeight * density));
         Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
@@ -245,27 +248,31 @@ final class MarkerBanner {
 
         Paint background = new Paint(Paint.ANTI_ALIAS_FLAG);
         background.setColor(color);
-        canvas.drawRoundRect(new RectF(0, 0, width, capsuleHeight),
+        canvas.drawRoundRect(new RectF(startX, 0, startX + width, capsuleHeight),
             capsuleHeight / 2, capsuleHeight / 2, background);
 
-        float markerX = toRight ? markerMargin : HORIZONTAL_PADDING + textWidth + TEXT_GAP;
-        float textX = toRight ? markerX + iconWidth + TEXT_GAP : HORIZONTAL_PADDING;
+        float markerX = startX + (toRight ? markerMargin : HORIZONTAL_PADDING + textWidth + TEXT_GAP);
+        float textX = toRight
+            ? markerX + iconWidth + TEXT_GAP + RIGHT_CAP_ALIGNMENT_PX / density
+            : startX + HORIZONTAL_PADDING;
+        float lineWidth = toRight
+            ? Math.min(textWidth, width - textX - markerMargin)
+            : textWidth;
         float textTop = (capsuleHeight - textHeight) / 2;
         if (!title.isEmpty()) {
-            String line = ellipsize(title, titlePaint, textWidth);
+            String line = ellipsize(title, titlePaint, lineWidth);
             canvas.drawText(line, textX, textTop - titlePaint.ascent(), titlePaint);
             textTop += titleHeight + (subtitle.isEmpty() ? 0 : 2);
         }
         if (!subtitle.isEmpty()) {
-            String line = ellipsize(subtitle, subtitlePaint, textWidth);
+            String line = ellipsize(subtitle, subtitlePaint, lineWidth);
             canvas.drawText(line, textX, textTop - subtitlePaint.ascent(), subtitlePaint);
         }
 
         return new BannerBitmap(bitmap,
-            (markerX + anchorX * iconWidth) / width,
-            ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight
-                + VERTICAL_LIFT + 10 / density)
-                / capsuleHeight);
+            (markerX + anchorX * iconWidth) / (bitmapWidth / density),
+            ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight) / capsuleHeight,
+            Math.round(width * density));
     }
 
     private TextPaint textPaint(float size, boolean bold) {
@@ -294,19 +301,23 @@ final class MarkerBanner {
 
     private void updatePositions() {
         LatLng position = marker.getPosition();
-        if (!switching) {
-            leftBanner.setPosition(position);
-            rightBanner.setPosition(position);
-            return;
-        }
         Projection projection = map.getProjection();
         Point base = projection.toScreenLocation(position);
+        int bannerY = base.y - BANNER_VERTICAL_OFFSET_PX;
+        if (!switching) {
+            leftBanner.setPosition(projection.fromScreenLocation(new Point(base.x, bannerY)));
+            rightBanner.setPosition(projection.fromScreenLocation(new Point(
+                base.x - RIGHT_CAP_ALIGNMENT_PX, bannerY)));
+            return;
+        }
         float distance = (leftWidthPx + rightWidthPx) / 2 - iconWidth * density;
         int side = direction > 0 ? 1 : -1;
         banner(previousDirection).setPosition(projection.fromScreenLocation(new Point(
-            Math.round(base.x + side * distance * switchProgress), base.y)));
+            Math.round(base.x + side * distance * switchProgress)
+                - (previousDirection > 0 ? RIGHT_CAP_ALIGNMENT_PX : 0), bannerY)));
         banner(direction).setPosition(projection.fromScreenLocation(new Point(
-            Math.round(base.x - side * distance * (1 - switchProgress)), base.y)));
+            Math.round(base.x - side * distance * (1 - switchProgress))
+                - (direction > 0 ? RIGHT_CAP_ALIGNMENT_PX : 0), bannerY)));
     }
 
     private void animateScale(Marker target, float fromX, float toX, long duration,
@@ -346,11 +357,13 @@ final class MarkerBanner {
         final Bitmap bitmap;
         final float anchorX;
         final float anchorY;
+        final float capsuleWidthPx;
 
-        BannerBitmap(Bitmap bitmap, float anchorX, float anchorY) {
+        BannerBitmap(Bitmap bitmap, float anchorX, float anchorY, float capsuleWidthPx) {
             this.bitmap = bitmap;
             this.anchorX = anchorX;
             this.anchorY = anchorY;
+            this.capsuleWidthPx = capsuleWidthPx;
         }
     }
 }
