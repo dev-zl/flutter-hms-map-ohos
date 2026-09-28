@@ -33,6 +33,8 @@ final class MarkerBanner {
     private static final float MAX_BITMAP_WIDTH_PX = 576;
     private static final float HORIZONTAL_PADDING = 12;
     private static final float MARKER_MARGIN_PX = 4;
+    private static final float EXTRA_WIDTH_PX = 20;
+    private static final float EXTRA_HEIGHT_PX = 10;
     private static final float TEXT_GAP = 6;
     private static final float VERTICAL_LIFT = 2;
 
@@ -184,12 +186,13 @@ final class MarkerBanner {
         float availableTextWidth = MAX_BITMAP_WIDTH_PX / density
             - markerMargin - iconWidth - TEXT_GAP - HORIZONTAL_PADDING;
         float textWidth = Math.min(Math.max(0, availableTextWidth),
-            Math.min(MAX_TEXT_WIDTH, Math.max(40, Math.max(titleWidth, subtitleWidth))));
+            Math.min(MAX_TEXT_WIDTH, Math.max(40, Math.max(titleWidth, subtitleWidth))))
+            + EXTRA_WIDTH_PX / density;
         float titleHeight = title.isEmpty() ? 0 : 14;
         float subtitleHeight = subtitle.isEmpty() ? 0 : 16;
         float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 : 0) + subtitleHeight;
         textHeight = Math.max(textHeight, 20);
-        float capsuleHeight = Math.max(iconHeight + 4, 56);
+        float capsuleHeight = Math.max(iconHeight + 4, 56) + EXTRA_HEIGHT_PX / density;
         float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
         int bitmapWidth = Math.max(1, Math.round(width * density));
         int bitmapHeight = Math.max(1, Math.round(capsuleHeight * density));
