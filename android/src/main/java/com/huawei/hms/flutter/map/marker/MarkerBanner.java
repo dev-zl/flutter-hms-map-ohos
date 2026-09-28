@@ -1,11 +1,14 @@
 package com.huawei.hms.flutter.map.marker;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.text.TextPaint;
@@ -13,11 +16,11 @@ import android.text.TextUtils;
 import android.view.animation.AccelerateDecelerateInterpolator;
 
 import com.huawei.hms.maps.HuaweiMap;
+import com.huawei.hms.maps.Projection;
 import com.huawei.hms.maps.model.BitmapDescriptorFactory;
 import com.huawei.hms.maps.model.LatLng;
 import com.huawei.hms.maps.model.Marker;
 import com.huawei.hms.maps.model.MarkerOptions;
-import com.huawei.hms.maps.model.animation.AlphaAnimation;
 import com.huawei.hms.maps.model.animation.Animation;
 import com.huawei.hms.maps.model.animation.ScaleAnimation;
 
@@ -57,6 +60,11 @@ final class MarkerBanner {
     private float iconHeight;
     private float anchorX;
     private float anchorY;
+    private float leftWidthPx;
+    private float rightWidthPx;
+    private float switchProgress;
+    private int previousDirection;
+    private boolean switching;
 
     static boolean enabled(Map<?, ?> data) {
         Map<?, ?> appearance = (Map<?, ?>) data.get("appearance");
@@ -133,20 +141,51 @@ final class MarkerBanner {
 
     void pan(int requestedDirection, boolean animated) {
         if (disposed || requestedDirection == direction) return;
+        if (positionAnimator != null) positionAnimator.cancel();
         Marker outgoing = banner(direction);
+        previousDirection = direction;
         direction = requestedDirection;
         Marker incoming = banner(direction);
 
         if (expanded && marker.isVisible()) {
             if (animated) {
-                animateDirection(outgoing, false);
-                animateDirection(incoming, true);
+                switching = true;
+                switchProgress = 0;
+                outgoing.setVisible(true);
+                incoming.setVisible(false);
+                outgoing.setAlpha(marker.getAlpha());
+                incoming.setAlpha(marker.getAlpha());
+                updatePositions();
+                positionAnimator = ValueAnimator.ofFloat(0, 1);
+                positionAnimator.setDuration(DIRECTION_DURATION);
+                positionAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+                positionAnimator.addUpdateListener(value -> {
+                    switchProgress = (float) value.getAnimatedValue();
+                    updatePositions();
+                    outgoing.setVisible(switchProgress < .5f);
+                    incoming.setVisible(switchProgress >= .5f);
+                });
+                positionAnimator.addListener(new AnimatorListenerAdapter() {
+                    @Override public void onAnimationEnd(Animator animation) {
+                        if (disposed) return;
+                        switching = false;
+                        outgoing.setVisible(false);
+                        outgoing.setAlpha(marker.getAlpha());
+                        incoming.setAlpha(marker.getAlpha());
+                        updatePositions();
+                    }
+                });
+                positionAnimator.start();
             } else {
+                switching = false;
                 outgoing.setVisible(false);
                 incoming.setVisible(true);
+                updatePositions();
             }
+        } else {
+            switching = false;
+            updatePositions();
         }
-        followMarkerAnimation(animated);
     }
 
     void updatePosition() {
@@ -177,6 +216,8 @@ final class MarkerBanner {
         leftBanner.setMarkerAnchor(left.anchorX, left.anchorY);
         rightBanner.setIcon(BitmapDescriptorFactory.fromBitmap(right.bitmap));
         rightBanner.setMarkerAnchor(right.anchorX, right.anchorY);
+        leftWidthPx = left.bitmap.getWidth();
+        rightWidthPx = right.bitmap.getWidth();
     }
 
     private BannerBitmap drawBanner(boolean toRight) {
@@ -253,21 +294,19 @@ final class MarkerBanner {
 
     private void updatePositions() {
         LatLng position = marker.getPosition();
-        leftBanner.setPosition(position);
-        rightBanner.setPosition(position);
-    }
-
-    private void followMarkerAnimation(boolean animated) {
-        if (positionAnimator != null) positionAnimator.cancel();
-        if (!animated) {
-            updatePositions();
+        if (!switching) {
+            leftBanner.setPosition(position);
+            rightBanner.setPosition(position);
             return;
         }
-        positionAnimator = ValueAnimator.ofFloat(0, 1);
-        positionAnimator.setDuration(DIRECTION_DURATION);
-        positionAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
-        positionAnimator.addUpdateListener(value -> updatePositions());
-        positionAnimator.start();
+        Projection projection = map.getProjection();
+        Point base = projection.toScreenLocation(position);
+        float distance = (leftWidthPx + rightWidthPx) / 2 - iconWidth * density;
+        int side = direction > 0 ? 1 : -1;
+        banner(previousDirection).setPosition(projection.fromScreenLocation(new Point(
+            Math.round(base.x + side * distance * switchProgress), base.y)));
+        banner(direction).setPosition(projection.fromScreenLocation(new Point(
+            Math.round(base.x - side * distance * (1 - switchProgress)), base.y)));
     }
 
     private void animateScale(Marker target, float fromX, float toX, long duration,
@@ -284,24 +323,6 @@ final class MarkerBanner {
                     if (!expanded || target != banner(direction)) {
                         target.setVisible(false);
                     }
-                }
-            });
-        }
-        target.setAnimation(animation);
-        target.startAnimation();
-    }
-
-    private void animateDirection(Marker target, boolean showing) {
-        target.setVisible(true);
-        AlphaAnimation animation = new AlphaAnimation(showing ? 0 : 1, showing ? 1 : 0);
-        animation.setDuration(DIRECTION_DURATION);
-        animation.setInterpolator(new AccelerateDecelerateInterpolator());
-        animation.setFillMode(Animation.FILL_MODE_FORWARDS);
-        if (!showing) {
-            animation.setAnimationListener(new Animation.AnimationListener() {
-                @Override public void onAnimationStart() { }
-                @Override public void onAnimationEnd() {
-                    if (target != banner(direction)) target.setVisible(false);
                 }
             });
         }
