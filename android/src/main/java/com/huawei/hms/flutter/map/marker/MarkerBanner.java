@@ -238,9 +238,10 @@ final class MarkerBanner {
         textHeight = Math.max(textHeight, 20);
         float capsuleHeight = Math.max(iconHeight + 4, 56) + EXTRA_HEIGHT_PX / density;
         float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
-        float bitmapWidthDp = width + (toRight ? 0 : RIGHT_EXTRA_WIDTH_PX / density);
-        float startX = bitmapWidthDp - width;
-        int bitmapWidth = Math.max(1, Math.round(bitmapWidthDp * density));
+        int capsuleWidthPx = Math.max(1, Math.round(width * density));
+        int bitmapWidth = capsuleWidthPx + (toRight ? 0 : Math.round(RIGHT_EXTRA_WIDTH_PX));
+        float startX = (bitmapWidth - capsuleWidthPx) / density;
+        float capsuleWidth = capsuleWidthPx / density;
         int bitmapHeight = Math.max(1, Math.round(capsuleHeight * density));
         Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
@@ -248,15 +249,17 @@ final class MarkerBanner {
 
         Paint background = new Paint(Paint.ANTI_ALIAS_FLAG);
         background.setColor(color);
-        canvas.drawRoundRect(new RectF(startX, 0, startX + width, capsuleHeight),
+        canvas.drawRoundRect(new RectF(startX, 0, startX + capsuleWidth, capsuleHeight),
             capsuleHeight / 2, capsuleHeight / 2, background);
 
-        float markerX = startX + (toRight ? markerMargin : HORIZONTAL_PADDING + textWidth + TEXT_GAP);
+        float markerX = toRight
+            ? startX + markerMargin
+            : startX + capsuleWidth - markerMargin - iconWidth;
         float textX = toRight
             ? markerX + iconWidth + TEXT_GAP + RIGHT_CAP_ALIGNMENT_PX / density
             : startX + HORIZONTAL_PADDING;
         float lineWidth = toRight
-            ? Math.min(textWidth, width - textX - markerMargin)
+            ? Math.min(textWidth, capsuleWidth - textX - markerMargin)
             : textWidth;
         float textTop = (capsuleHeight - textHeight) / 2;
         if (!title.isEmpty()) {
@@ -272,7 +275,7 @@ final class MarkerBanner {
         return new BannerBitmap(bitmap,
             (markerX + anchorX * iconWidth) / (bitmapWidth / density),
             ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight) / capsuleHeight,
-            Math.round(width * density));
+            capsuleWidthPx);
     }
 
     private TextPaint textPaint(float size, boolean bold) {
