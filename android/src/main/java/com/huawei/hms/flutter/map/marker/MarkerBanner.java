@@ -125,15 +125,17 @@ final class MarkerBanner {
         boolean shouldExpand = Boolean.TRUE.equals(appearance.get("bannerExpanded"));
         if (!configured) {
             expanded = shouldExpand;
-            banner(direction).setVisible(expanded && marker.isVisible());
             otherBanner(direction).setVisible(false);
             configured = true;
+            if (expanded && marker.isVisible()) {
+                animateScale(banner(direction), collapsedScale(direction), 1, EXPAND_DURATION, false);
+            }
         } else if (shouldExpand != expanded) {
             expanded = shouldExpand;
             if (expanded) {
-                animateScale(banner(direction), 0, 1, EXPAND_DURATION, false);
+                animateScale(banner(direction), collapsedScale(direction), 1, EXPAND_DURATION, false);
             } else {
-                animateScale(banner(direction), 1, 0, COLLAPSE_DURATION, true);
+                animateScale(banner(direction), 1, collapsedScale(direction), COLLAPSE_DURATION, true);
             }
         } else {
             banner(direction).setVisible(expanded && marker.isVisible());
@@ -327,7 +329,6 @@ final class MarkerBanner {
 
     private void animateScale(Marker target, float fromX, float toX, long duration,
                               boolean hideAtEnd) {
-        target.setVisible(marker.isVisible());
         ScaleAnimation animation = new ScaleAnimation(fromX, toX, 1, 1);
         animation.setDuration(duration);
         animation.setInterpolator(new AccelerateDecelerateInterpolator());
@@ -343,7 +344,13 @@ final class MarkerBanner {
             });
         }
         target.setAnimation(animation);
+        target.setVisible(marker.isVisible());
         target.startAnimation();
+    }
+
+    private float collapsedScale(int value) {
+        float width = value > 0 ? rightWidthPx : leftWidthPx;
+        return Math.min(1, iconWidth * density / width);
     }
 
     private Marker banner(int value) {
