@@ -74,6 +74,7 @@ final class MarkerAppearance {
         dotSize = ((Number) appearance.get("anchorDotSize")).floatValue();
         this.groundOffset = groundOffset;
         logicalPosition = position;
+        // 业务标记开启中点后自动随拖图左右偏移，不再要求额外设置 swayOnPan。
         sway = Boolean.TRUE.equals(appearance.get("swayOnPan"))
             || Boolean.TRUE.equals(appearance.get("showAnchorDot"));
         visible = !Boolean.FALSE.equals(data.get("visible"));

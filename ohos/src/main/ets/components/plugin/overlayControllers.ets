@@ -71,6 +71,7 @@ export class MarkerController {
     const options = data['appearance'] as Record<string, Object> | undefined;
     this.panEnabled = options?.['showAnchorDot'] === true || options?.['swayOnPan'] === true ||
       options?.['bannerExpanded'] === true;
+    // 业务隐藏或透明时不进原生视野索引；放大后显示会重新配置并入索引。
     this.panVisible = data[Param.VISIBLE] !== false &&
       (typeof data[Param.ALPHA] !== 'number' || (data[Param.ALPHA] as number) > 0);
     if (MarkerAppearance.enabled(data)) {

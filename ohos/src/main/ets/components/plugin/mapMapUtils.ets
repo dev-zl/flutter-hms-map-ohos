@@ -97,6 +97,7 @@ export class MapUtils implements MethodCallHandler {
 
   private markerControllers: Map<string, MarkerController> = new Map();
   private markerPanDirection: number = -1;
+  // 只把需要偏移且业务可见的标记放进网格，方向变化时按视野取候选标记。
   private readonly panCellSize: number = 0.02;
   private panCells: Map<string, Map<string, MarkerController>> = new Map();
   private panCellById: Map<string, string> = new Map();
@@ -108,6 +109,7 @@ export class MapUtils implements MethodCallHandler {
     this.refreshVisiblePanMarkers(true);
   }
   refreshVisiblePanMarkers(animated: boolean = false): void {
+    // 相机停止时用非动画方式同步新进入视野的标记。
     if (this.panCells.size === 0) return;
     const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
     if (!bounds) return;
@@ -115,6 +117,7 @@ export class MapUtils implements MethodCallHandler {
     const west = this.panCell(bounds.southwest.longitude), east = this.panCell(bounds.northeast.longitude);
     const longitudeCells = west <= east ? east - west + 1
       : this.panCell(180) - west + east - this.panCell(-180) + 2;
+    // 视野过大时直接遍历已有网格，避免访问大量空网格。
     if ((north - south + 1) * longitudeCells > this.panCells.size) {
       this.panCells.forEach((bucket: Map<string, MarkerController>) => this.panBucket(bucket, bounds, animated));
       return;
@@ -143,6 +146,7 @@ export class MapUtils implements MethodCallHandler {
     if (bucket?.size === 0) this.panCells.delete(key);
   }
   private reindexPanMarker(id: string, controller: MarkerController): void {
+    // 显隐、增删或坐标更新都通过这里同步索引；隐藏标记不会被查询到。
     this.removePanMarker(id);
     if (!controller.needsPanUpdate()) return;
     const key = this.panCellKey(controller.getPosition());

@@ -42,6 +42,7 @@ public class MarkersUtils {
     private int panDirection = -1;
     private float lastZoom = Float.NaN, lastBearing = Float.NaN, lastTilt = Float.NaN;
     private final Map<LatLng, Float> groundOffsets = new HashMap<>();
+    // 仅索引需要偏移且业务可见的标记；方向变化时按视野查询，不扫 idsOnMap。
     private static final double PAN_CELL_SIZE = 0.02;
     private final Map<String, Map<String, MarkerController>> panCells = new HashMap<>();
     private final Map<String, String> panCellById = new HashMap<>();
@@ -292,6 +293,7 @@ public class MarkersUtils {
     }
 
     public void refreshVisiblePanMarkers() {
+        // 相机停止后同步刚进入视野的标记，不补播动画。
         refreshVisiblePanMarkers(false);
     }
 
@@ -305,6 +307,7 @@ public class MarkersUtils {
         int east = cell(bounds.northeast.longitude);
         long cellCount = (long) (north - south + 1) *
             (west <= east ? east - west + 1 : cell(180) - west + east - cell(-180) + 2);
+        // 大视野下遍历已有网格比枚举大量空网格更省时。
         if (cellCount > panCells.size()) {
             for (Map<String, MarkerController> bucket : panCells.values()) {
                 panBucket(bucket, bounds, panDirection, animated);
@@ -344,6 +347,7 @@ public class MarkersUtils {
     }
 
     private void reindexPanMarker(String id, MarkerController controller) {
+        // 增删、坐标变化或业务显隐变化后维护索引；隐藏标记不入索引。
         removePanMarker(id);
         if (!controller.needsPanUpdate()) return;
         String key = panCell(controller.position());

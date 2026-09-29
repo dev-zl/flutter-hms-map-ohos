@@ -73,6 +73,7 @@ class MarkerController implements MarkerMethods {
     LatLng position() { return logicalPosition; }
 
     boolean needsPanUpdate() {
+        // showAnchorDot 控制当前业务标记；其他旧标记的摇摆和展开横幅仍可沿用原配置。
         return panEnabled && marker.isVisible() && marker.getAlpha() > 0;
     }
 
