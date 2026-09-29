@@ -225,6 +225,7 @@ public class MapListenerHandler implements MapListener {
     @Override
     public void onCameraIdle() {
         mapUtils.updateMarkerAppearancePositions();
+        mapUtils.refreshVisiblePanMarkers();
         onCameraIdle.run();
         logger.startMethodExecutionTimer(Method.CAMERA_ON_IDLE);
         mChannel.invokeMethod(Method.CAMERA_ON_IDLE, Collections.singletonMap(Param.MAP, id));

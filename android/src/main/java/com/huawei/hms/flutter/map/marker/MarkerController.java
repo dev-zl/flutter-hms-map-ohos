@@ -27,10 +27,16 @@ class MarkerController implements MarkerMethods {
     private LatLng logicalPosition;
     private MarkerAppearance appearance;
     private MarkerBanner banner;
+    private boolean panEnabled;
     private final com.huawei.hms.maps.HuaweiMap map;
     private final float density;
 
     void configureAppearance(java.util.Map<?, ?> data, float groundOffset, int direction) {
+        java.util.Map<?, ?> options = (java.util.Map<?, ?>) data.get("appearance");
+        panEnabled = options != null &&
+            (Boolean.TRUE.equals(options.get("showAnchorDot"))
+                || Boolean.TRUE.equals(options.get("swayOnPan"))
+                || Boolean.TRUE.equals(options.get("bannerExpanded")));
         if (MarkerAppearance.enabled(data)) {
             if (appearance == null) {
                 appearance = new MarkerAppearance(map, marker, density, logicalPosition, data);
@@ -65,6 +71,10 @@ class MarkerController implements MarkerMethods {
     }
 
     LatLng position() { return logicalPosition; }
+
+    boolean needsPanUpdate() {
+        return panEnabled && marker.isVisible() && marker.getAlpha() > 0;
+    }
 
     void disposeAppearance() {
         if (appearance != null) {

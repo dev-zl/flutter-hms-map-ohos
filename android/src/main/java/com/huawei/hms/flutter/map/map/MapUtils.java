@@ -51,6 +51,7 @@ class MapUtils {
     private final MarkersUtils markersUtils;
 
     void setMarkerPanDirection(int direction) { markersUtils.setPanDirection(direction); }
+    void refreshVisiblePanMarkers() { markersUtils.refreshVisiblePanMarkers(); }
     void setMarkerGroundPoints(List<?> points, float offset) { markersUtils.setGroundPoints(points, offset); }
     void updateMarkerAppearancePositions() { markersUtils.updateAppearancePositions(); }
     void disposeMarkerAppearances() { markersUtils.disposeAppearances(); }

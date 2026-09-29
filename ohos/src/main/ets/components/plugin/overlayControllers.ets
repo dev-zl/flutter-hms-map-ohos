@@ -61,11 +61,18 @@ export class MarkerController {
   private appearance: MarkerAppearance | null = null;
   private groundOffset: number = 0;
   private direction: number = -1;
+  private panEnabled: boolean = false;
+  private panVisible: boolean = false;
   private deleted: boolean = false;
   private iconRevision: number = 0;
 
   configureAppearance(data: Record<string, Object>, groundOffset: number, direction: number): void {
     this.groundOffset = groundOffset; this.direction = direction;
+    const options = data['appearance'] as Record<string, Object> | undefined;
+    this.panEnabled = options?.['showAnchorDot'] === true || options?.['swayOnPan'] === true ||
+      options?.['bannerExpanded'] === true;
+    this.panVisible = data[Param.VISIBLE] !== false &&
+      (typeof data[Param.ALPHA] !== 'number' || (data[Param.ALPHA] as number) > 0);
     if (MarkerAppearance.enabled(data)) {
       if (!this.appearance) this.appearance = new MarkerAppearance(this.marker);
       this.appearance.configure(data, groundOffset, direction).catch((error: Error) => {
@@ -76,6 +83,7 @@ export class MarkerController {
     }
   }
   pan(direction: number, animated: boolean = true): void { this.direction = direction; this.appearance?.pan(direction, animated); }
+  needsPanUpdate(): boolean { return this.panEnabled && this.panVisible; }
   setGroundOffset(value: number): void { this.groundOffset = value; this.appearance?.setGroundOffset(value); }
 
   private ctx: common.UIAbilityContext | null;

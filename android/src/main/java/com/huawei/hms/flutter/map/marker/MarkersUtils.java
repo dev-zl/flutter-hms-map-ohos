@@ -25,6 +25,7 @@ import com.huawei.hms.flutter.map.utils.Convert;
 import com.huawei.hms.flutter.map.utils.ToJson;
 import com.huawei.hms.maps.HuaweiMap;
 import com.huawei.hms.maps.model.LatLng;
+import com.huawei.hms.maps.model.LatLngBounds;
 import com.huawei.hms.maps.model.Marker;
 import com.huawei.hms.maps.model.MarkerOptions;
 
@@ -41,6 +42,9 @@ public class MarkersUtils {
     private int panDirection = -1;
     private float lastZoom = Float.NaN, lastBearing = Float.NaN, lastTilt = Float.NaN;
     private final Map<LatLng, Float> groundOffsets = new HashMap<>();
+    private static final double PAN_CELL_SIZE = 0.02;
+    private final Map<String, Map<String, MarkerController>> panCells = new HashMap<>();
+    private final Map<String, String> panCellById = new HashMap<>();
 
     private final MethodChannel mChannel;
 
@@ -99,6 +103,7 @@ public class MarkersUtils {
 
         idsOnMap.put(id, controller);
         ids.put(newMarker.getId(), id);
+        reindexPanMarker(id, controller);
     }
 
     private void update(final HashMap<String, Object> marker) {
@@ -111,6 +116,7 @@ public class MarkersUtils {
             Convert.processMarkerOptions(marker, markerController, messenger);
             markerController.configureAppearance(marker,
                 groundOffsets.getOrDefault(markerController.position(), 0f), panDirection);
+            reindexPanMarker(markerId, markerController);
         }
     }
 
@@ -135,6 +141,7 @@ public class MarkersUtils {
             }
 
             final MarkerController markerController = idsOnMap.remove(id);
+            removePanMarker(id);
             if (markerController != null) {
 
                 logger.startMethodExecutionTimer("removeMarker");
@@ -281,10 +288,74 @@ public class MarkersUtils {
     public void setPanDirection(int direction) {
         if (direction == panDirection || huaweiMap == null) return;
         panDirection = direction;
-        com.huawei.hms.maps.model.LatLngBounds bounds =
+        refreshVisiblePanMarkers(true);
+    }
+
+    public void refreshVisiblePanMarkers() {
+        refreshVisiblePanMarkers(false);
+    }
+
+    private void refreshVisiblePanMarkers(boolean animated) {
+        if (huaweiMap == null || panCells.isEmpty()) return;
+        LatLngBounds bounds =
             huaweiMap.getProjection().getVisibleRegion().latLngBounds;
-        for (MarkerController controller : idsOnMap.values()) {
-            controller.pan(direction, bounds.contains(controller.position()));
+        int south = cell(bounds.southwest.latitude);
+        int north = cell(bounds.northeast.latitude);
+        int west = cell(bounds.southwest.longitude);
+        int east = cell(bounds.northeast.longitude);
+        long cellCount = (long) (north - south + 1) *
+            (west <= east ? east - west + 1 : cell(180) - west + east - cell(-180) + 2);
+        if (cellCount > panCells.size()) {
+            for (Map<String, MarkerController> bucket : panCells.values()) {
+                panBucket(bucket, bounds, panDirection, animated);
+            }
+            return;
+        }
+        for (int lat = south; lat <= north; lat++) {
+            if (west <= east) {
+                for (int lon = west; lon <= east; lon++) {
+                    panBucket(panCells.get(lat + ":" + lon), bounds, panDirection, animated);
+                }
+            } else {
+                for (int lon = west; lon <= cell(180); lon++) {
+                    panBucket(panCells.get(lat + ":" + lon), bounds, panDirection, animated);
+                }
+                for (int lon = cell(-180); lon <= east; lon++) {
+                    panBucket(panCells.get(lat + ":" + lon), bounds, panDirection, animated);
+                }
+            }
+        }
+    }
+
+    private static int cell(double coordinate) {
+        return (int) Math.floor(coordinate / PAN_CELL_SIZE);
+    }
+
+    private static String panCell(LatLng position) {
+        return cell(position.latitude) + ":" + cell(position.longitude);
+    }
+
+    private void removePanMarker(String id) {
+        String key = panCellById.remove(id);
+        if (key == null) return;
+        Map<String, MarkerController> bucket = panCells.get(key);
+        bucket.remove(id);
+        if (bucket.isEmpty()) panCells.remove(key);
+    }
+
+    private void reindexPanMarker(String id, MarkerController controller) {
+        removePanMarker(id);
+        if (!controller.needsPanUpdate()) return;
+        String key = panCell(controller.position());
+        panCells.computeIfAbsent(key, ignored -> new HashMap<>()).put(id, controller);
+        panCellById.put(id, key);
+    }
+
+    private static void panBucket(Map<String, MarkerController> bucket,
+                                  LatLngBounds bounds, int direction, boolean animated) {
+        if (bucket == null) return;
+        for (MarkerController controller : bucket.values()) {
+            if (bounds.contains(controller.position())) controller.pan(direction, animated);
         }
     }
 
@@ -313,6 +384,8 @@ public class MarkersUtils {
 
     public void disposeAppearances() {
         for (MarkerController controller : idsOnMap.values()) controller.disposeAppearance();
+        panCells.clear();
+        panCellById.clear();
         groundOffsets.clear();
     }
 

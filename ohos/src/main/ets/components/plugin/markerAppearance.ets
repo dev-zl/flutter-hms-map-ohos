@@ -182,7 +182,7 @@ export class MarkerAppearance {
     const dotSize = this.number('anchorDotSize', 8);
     const offset = this.options['anchorDotOffset'] as Array<number>;
     const ox = dot ? offset[0] : 0, oy = dot ? offset[1] : 0;
-    const sway = this.flag('swayOnPan');
+    const sway = this.flag('swayOnPan') || this.flag('showAnchorDot');
     const shiftAmplitude = sway
       ? (dot ? w * 0.46 : Math.max(8, this.number('maxSwayDegrees', 24) * 0.55)) : 0;
     const shift = this.direction * shiftAmplitude;

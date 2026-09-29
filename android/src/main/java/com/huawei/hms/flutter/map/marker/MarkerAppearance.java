@@ -74,7 +74,8 @@ final class MarkerAppearance {
         dotSize = ((Number) appearance.get("anchorDotSize")).floatValue();
         this.groundOffset = groundOffset;
         logicalPosition = position;
-        sway = Boolean.TRUE.equals(appearance.get("swayOnPan"));
+        sway = Boolean.TRUE.equals(appearance.get("swayOnPan"))
+            || Boolean.TRUE.equals(appearance.get("showAnchorDot"));
         visible = !Boolean.FALSE.equals(data.get("visible"));
         dot.setVisible(visible);
         dot.setZIndex(marker.getZIndex() - .01f);

@@ -97,14 +97,65 @@ export class MapUtils implements MethodCallHandler {
 
   private markerControllers: Map<string, MarkerController> = new Map();
   private markerPanDirection: number = -1;
+  private readonly panCellSize: number = 0.02;
+  private panCells: Map<string, Map<string, MarkerController>> = new Map();
+  private panCellById: Map<string, string> = new Map();
   private markerGroundOffsets: Map<string, number> = new Map();
 
   setMarkerPanDirection(direction: number): void {
     if (direction === this.markerPanDirection) return;
     this.markerPanDirection = direction;
+    this.refreshVisiblePanMarkers(true);
+  }
+  refreshVisiblePanMarkers(animated: boolean = false): void {
+    if (this.panCells.size === 0) return;
     const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
-    this.markerControllers.forEach((controller: MarkerController) => {
-      controller.pan(direction, bounds ? map.LatLngBoundsUtils.contains(bounds, controller.getPosition()) : false);
+    if (!bounds) return;
+    const south = this.panCell(bounds.southwest.latitude), north = this.panCell(bounds.northeast.latitude);
+    const west = this.panCell(bounds.southwest.longitude), east = this.panCell(bounds.northeast.longitude);
+    const longitudeCells = west <= east ? east - west + 1
+      : this.panCell(180) - west + east - this.panCell(-180) + 2;
+    if ((north - south + 1) * longitudeCells > this.panCells.size) {
+      this.panCells.forEach((bucket: Map<string, MarkerController>) => this.panBucket(bucket, bounds, animated));
+      return;
+    }
+    for (let lat = south; lat <= north; lat++) {
+      if (west <= east) {
+        for (let lon = west; lon <= east; lon++) this.panBucket(this.panCells.get(`${lat}:${lon}`), bounds, animated);
+      } else {
+        for (let lon = west; lon <= this.panCell(180); lon++)
+          this.panBucket(this.panCells.get(`${lat}:${lon}`), bounds, animated);
+        for (let lon = this.panCell(-180); lon <= east; lon++)
+          this.panBucket(this.panCells.get(`${lat}:${lon}`), bounds, animated);
+      }
+    }
+  }
+  private panCell(value: number): number { return Math.floor(value / this.panCellSize); }
+  private panCellKey(position: mapCommon.LatLng): string {
+    return `${this.panCell(position.latitude)}:${this.panCell(position.longitude)}`;
+  }
+  private removePanMarker(id: string): void {
+    const key = this.panCellById.get(id);
+    if (key === undefined) return;
+    this.panCellById.delete(id);
+    const bucket = this.panCells.get(key);
+    bucket?.delete(id);
+    if (bucket?.size === 0) this.panCells.delete(key);
+  }
+  private reindexPanMarker(id: string, controller: MarkerController): void {
+    this.removePanMarker(id);
+    if (!controller.needsPanUpdate()) return;
+    const key = this.panCellKey(controller.getPosition());
+    let bucket = this.panCells.get(key);
+    if (!bucket) { bucket = new Map(); this.panCells.set(key, bucket); }
+    bucket.set(id, controller);
+    this.panCellById.set(id, key);
+  }
+  private panBucket(bucket: Map<string, MarkerController> | undefined,
+                    bounds: mapCommon.LatLngBounds, animated: boolean): void {
+    bucket?.forEach((controller: MarkerController) => {
+      if (map.LatLngBoundsUtils.contains(bounds, controller.getPosition()))
+        controller.pan(this.markerPanDirection, animated);
     });
   }
   private groundKey(position: mapCommon.LatLng): string { return `${position.latitude}:${position.longitude}`; }
@@ -388,6 +439,7 @@ export class MapUtils implements MethodCallHandler {
         if (ctrl) {
           ctrl.update(item);
           ctrl.setGroundOffset(this.markerGroundOffsets.get(this.groundKey(ctrl.getPosition())) ?? 0);
+          this.reindexPanMarker(dartId, ctrl);
           if (item[Param.CLUSTERABLE] !== undefined) {
             const clusterable = item[Param.CLUSTERABLE] as boolean;
             if (clusterable) {
@@ -412,6 +464,7 @@ export class MapUtils implements MethodCallHandler {
           const nativeId = ctrl.getNativeId();
           ctrl.delete();
           this.markerControllers.delete(dartId);
+          this.removePanMarker(dartId);
           if (nativeId) this.nativeToDartId.delete(nativeId);
           if (this.clusterableMarkers.delete(dartId)) {
             this.scheduleClusterRebuild();
@@ -717,6 +770,7 @@ export class MapUtils implements MethodCallHandler {
       this.markerControllers.set(id, markerController);
       markerController.configureAppearance(data,
         this.markerGroundOffsets.get(this.groundKey(opts.position)) ?? 0, this.markerPanDirection);
+      this.reindexPanMarker(id, markerController);
       const nativeId = marker.getId() ?? '';
       if (nativeId) this.nativeToDartId.set(nativeId, id);
       hilog.info(
@@ -1019,6 +1073,8 @@ export class MapUtils implements MethodCallHandler {
     this.heatMapControllers.forEach(c => c.delete());
 
     this.markerControllers.clear();
+    this.panCells.clear();
+    this.panCellById.clear();
     this.markerGroundOffsets.clear();
     this.polylineControllers.clear();
     this.polygonControllers.clear();
