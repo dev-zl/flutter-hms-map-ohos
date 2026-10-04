@@ -28,11 +28,22 @@ class MarkerController implements MarkerMethods {
     private MarkerAppearance appearance;
     private MarkerBanner banner;
     private boolean panEnabled;
+    private boolean showAnchorDot;
+    private boolean bannerManuallyControlled;
+    private boolean bannerExpanded;
+    private boolean autoBannerExpanded;
     private final com.huawei.hms.maps.HuaweiMap map;
     private final float density;
 
     void configureAppearance(java.util.Map<?, ?> data, float groundOffset, int direction) {
         java.util.Map<?, ?> options = (java.util.Map<?, ?>) data.get("appearance");
+        showAnchorDot = options != null && Boolean.TRUE.equals(options.get("showAnchorDot"));
+        bannerManuallyControlled = options != null &&
+            Boolean.TRUE.equals(options.get("bannerManuallyControlled"));
+        bannerExpanded = options != null && Boolean.TRUE.equals(options.get("bannerExpanded"));
+        if (bannerManuallyControlled || !marker.isVisible() || marker.getAlpha() <= 0) {
+            autoBannerExpanded = false;
+        }
         panEnabled = options != null &&
             (Boolean.TRUE.equals(options.get("showAnchorDot"))
                 || Boolean.TRUE.equals(options.get("swayOnPan"))
@@ -49,10 +60,11 @@ class MarkerController implements MarkerMethods {
         }
         if (MarkerBanner.enabled(data)) {
             if (banner == null) banner = new MarkerBanner(map, marker, density);
-            banner.configure(data, direction);
+            banner.configure(data, direction, autoBannerExpanded);
         } else if (banner != null) {
             banner.dispose();
             banner = null;
+            autoBannerExpanded = false;
         }
     }
 
@@ -75,6 +87,17 @@ class MarkerController implements MarkerMethods {
     boolean needsPanUpdate() {
         // showAnchorDot 控制当前业务标记；其他旧标记的摇摆和展开横幅仍可沿用原配置。
         return panEnabled && marker.isVisible() && marker.getAlpha() > 0;
+    }
+
+    boolean eligibleForAutoBanner() {
+        return showAnchorDot && !bannerManuallyControlled && !bannerExpanded &&
+            banner != null && marker.isVisible() && marker.getAlpha() > 0;
+    }
+
+    void setAutoBannerExpanded(boolean expanded) {
+        if (bannerManuallyControlled || banner == null) return;
+        autoBannerExpanded = expanded;
+        banner.setAutoExpanded(expanded);
     }
 
     void disposeAppearance() {

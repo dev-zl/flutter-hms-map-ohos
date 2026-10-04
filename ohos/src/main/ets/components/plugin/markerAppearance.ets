@@ -25,6 +25,7 @@ export class MarkerAppearance {
   private groundOffset: number = 0;
   private direction: number = -1;
   private targetDirection: number = -1;
+  private autoBannerExpanded: boolean = false;
   private expansion: number = 0;
   private scale: number = 1;
   private visible: boolean = false;
@@ -50,6 +51,9 @@ export class MarkerAppearance {
   async configure(data: Record<string, Object>, groundOffset: number, direction: number): Promise<void> {
     const revision = ++this.revision;
     this.options = data['appearance'] as Record<string, Object>;
+    if (this.options['bannerManuallyControlled'] === true || data['visible'] === false) {
+      this.autoBannerExpanded = false;
+    }
     this.groundOffset = groundOffset;
     this.targetDirection = direction;
     const anchor = data['anchor'] as Array<number>;
@@ -85,6 +89,11 @@ export class MarkerAppearance {
     if (direction === this.targetDirection) return;
     this.targetDirection = direction;
     this.animate(direction, this.expansionTarget(), this.visible && animated, false);
+  }
+  setAutoBannerExpanded(expanded: boolean): void {
+    if (this.options['bannerManuallyControlled'] === true || this.autoBannerExpanded === expanded) return;
+    this.autoBannerExpanded = expanded;
+    this.animate(this.targetDirection, this.expansionTarget(), this.visible, false);
   }
   dispose(): void {
     this.disposed = true; this.revision++;
@@ -127,7 +136,9 @@ export class MarkerAppearance {
   private number(key: string, fallback: number): number { return typeof this.options[key] === 'number' ? this.options[key] as number : fallback; }
   private string(key: string): string { return typeof this.options[key] === 'string' ? this.options[key] as string : ''; }
   private hasText(): boolean { return this.string('bannerTitle').length > 0 || this.string('bannerSubtitle').length > 0; }
-  private expansionTarget(): number { return this.flag('bannerExpanded') && this.hasText() ? 1 : 0; }
+  private expansionTarget(): number {
+    return (this.flag('bannerExpanded') || this.autoBannerExpanded) && this.hasText() ? 1 : 0;
+  }
   private color(key: string, fallback: number): string {
     const color = this.number(key, fallback);
     return `rgba(${(color >>> 16) & 255},${(color >>> 8) & 255},${color & 255},${((color >>> 24) & 255) / 255})`;

@@ -101,6 +101,11 @@ export class MapUtils implements MethodCallHandler {
   private readonly panCellSize: number = 0.02;
   private panCells: Map<string, Map<string, MarkerController>> = new Map();
   private panCellById: Map<string, string> = new Map();
+  private autoBannerQueue: Array<string> = [];
+  private autoBannerBatch: Array<string> = [];
+  private autoBannerCursor: number = 0;
+  private autoBannerStartTimer: number = -1;
+  private autoBannerBatchTimer: number = -1;
   private markerGroundOffsets: Map<string, number> = new Map();
 
   setMarkerPanDirection(direction: number): void {
@@ -113,25 +118,32 @@ export class MapUtils implements MethodCallHandler {
     if (this.panCells.size === 0) return;
     const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
     if (!bounds) return;
+    for (const id of this.visiblePanMarkerIds(bounds)) {
+      this.markerControllers.get(id)?.pan(this.markerPanDirection, animated);
+    }
+  }
+  private visiblePanMarkerIds(bounds: mapCommon.LatLngBounds): Array<string> {
+    const visible: Array<string> = [];
     const south = this.panCell(bounds.southwest.latitude), north = this.panCell(bounds.northeast.latitude);
     const west = this.panCell(bounds.southwest.longitude), east = this.panCell(bounds.northeast.longitude);
     const longitudeCells = west <= east ? east - west + 1
       : this.panCell(180) - west + east - this.panCell(-180) + 2;
     // 视野过大时直接遍历已有网格，避免访问大量空网格。
     if ((north - south + 1) * longitudeCells > this.panCells.size) {
-      this.panCells.forEach((bucket: Map<string, MarkerController>) => this.panBucket(bucket, bounds, animated));
-      return;
+      this.panCells.forEach((bucket: Map<string, MarkerController>) => this.addVisiblePanIds(bucket, bounds, visible));
+      return visible;
     }
     for (let lat = south; lat <= north; lat++) {
       if (west <= east) {
-        for (let lon = west; lon <= east; lon++) this.panBucket(this.panCells.get(`${lat}:${lon}`), bounds, animated);
+        for (let lon = west; lon <= east; lon++) this.addVisiblePanIds(this.panCells.get(`${lat}:${lon}`), bounds, visible);
       } else {
         for (let lon = west; lon <= this.panCell(180); lon++)
-          this.panBucket(this.panCells.get(`${lat}:${lon}`), bounds, animated);
+          this.addVisiblePanIds(this.panCells.get(`${lat}:${lon}`), bounds, visible);
         for (let lon = this.panCell(-180); lon <= east; lon++)
-          this.panBucket(this.panCells.get(`${lat}:${lon}`), bounds, animated);
+          this.addVisiblePanIds(this.panCells.get(`${lat}:${lon}`), bounds, visible);
       }
     }
+    return visible;
   }
   private panCell(value: number): number { return Math.floor(value / this.panCellSize); }
   private panCellKey(position: mapCommon.LatLng): string {
@@ -155,12 +167,57 @@ export class MapUtils implements MethodCallHandler {
     bucket.set(id, controller);
     this.panCellById.set(id, key);
   }
-  private panBucket(bucket: Map<string, MarkerController> | undefined,
-                    bounds: mapCommon.LatLngBounds, animated: boolean): void {
-    bucket?.forEach((controller: MarkerController) => {
+  private addVisiblePanIds(bucket: Map<string, MarkerController> | undefined,
+                           bounds: mapCommon.LatLngBounds, result: Array<string>): void {
+    bucket?.forEach((controller: MarkerController, id: string) => {
       if (map.LatLngBoundsUtils.contains(bounds, controller.getPosition()))
-        controller.pan(this.markerPanDirection, animated);
+        result.push(id);
     });
+  }
+
+  /** 开始移动时取消旧队列，只收起自动展开的横幅。 */
+  cancelAutoBannerRotation(): void {
+    if (this.autoBannerStartTimer >= 0) clearTimeout(this.autoBannerStartTimer);
+    if (this.autoBannerBatchTimer >= 0) clearTimeout(this.autoBannerBatchTimer);
+    this.autoBannerStartTimer = -1;
+    this.autoBannerBatchTimer = -1;
+    for (const id of this.autoBannerBatch) this.markerControllers.get(id)?.setAutoBannerExpanded(false);
+    this.autoBannerBatch = [];
+    this.autoBannerQueue = [];
+    this.autoBannerCursor = 0;
+  }
+  scheduleAutoBannerRotation(): void {
+    this.cancelAutoBannerRotation();
+    this.autoBannerStartTimer = setTimeout(() => {
+      this.autoBannerStartTimer = -1;
+      const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
+      if (!bounds) return;
+      this.autoBannerQueue = this.visiblePanMarkerIds(bounds).sort();
+      this.advanceAutoBannerBatch();
+    }, 500);
+  }
+  private advanceAutoBannerBatch(): void {
+    while (this.autoBannerBatch.length < 3 && this.autoBannerCursor < this.autoBannerQueue.length) {
+      const id = this.autoBannerQueue[this.autoBannerCursor++];
+      const controller = this.markerControllers.get(id);
+      if (!controller?.eligibleForAutoBanner()) continue;
+      controller.setAutoBannerExpanded(true);
+      this.autoBannerBatch.push(id);
+    }
+    if (this.autoBannerBatch.length > 0) {
+      this.autoBannerBatchTimer = setTimeout(() => {
+        this.autoBannerBatchTimer = -1;
+        for (const id of this.autoBannerBatch) this.markerControllers.get(id)?.setAutoBannerExpanded(false);
+        this.autoBannerBatch = [];
+        if (this.autoBannerCursor < this.autoBannerQueue.length) {
+          // 等上一批收起动画完成后，再展开下一批。
+          this.autoBannerBatchTimer = setTimeout(() => {
+            this.autoBannerBatchTimer = -1;
+            this.advanceAutoBannerBatch();
+          }, 500);
+        }
+      }, 4000);
+    }
   }
   private groundKey(position: mapCommon.LatLng): string { return `${position.latitude}:${position.longitude}`; }
 
@@ -1055,6 +1112,7 @@ export class MapUtils implements MethodCallHandler {
   }
 
   dispose(): void {
+    this.cancelAutoBannerRotation();
     this.massPointOverlays.forEach((overlay: map.MassPointOverlay) => {
       try { overlay.remove(); } catch (e) { /* ignore */ }
     });

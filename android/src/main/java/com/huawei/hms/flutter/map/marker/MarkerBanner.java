@@ -88,7 +88,7 @@ final class MarkerBanner {
         this.density = density;
     }
 
-    void configure(Map<?, ?> data, int requestedDirection) {
+    void configure(Map<?, ?> data, int requestedDirection, boolean autoExpanded) {
         Map<?, ?> appearance = (Map<?, ?>) data.get("appearance");
         List<?> anchor = (List<?>) data.get("anchor");
         byte[] icon = (byte[]) ((List<?>) data.get("icon")).get(1);
@@ -125,7 +125,7 @@ final class MarkerBanner {
         syncMarkerProperties();
         updatePositions();
 
-        boolean shouldExpand = Boolean.TRUE.equals(appearance.get("bannerExpanded"));
+        boolean shouldExpand = autoExpanded || Boolean.TRUE.equals(appearance.get("bannerExpanded"));
         if (!configured) {
             expanded = shouldExpand;
             otherBanner(direction).setVisible(false);
@@ -146,6 +146,20 @@ final class MarkerBanner {
         } else {
             banner(direction).setVisible(expanded && marker.isVisible());
             otherBanner(direction).setVisible(false);
+        }
+    }
+
+    void setAutoExpanded(boolean value) {
+        if (disposed || expanded == value) return;
+        // 手动展开会先在 configure 中根据头像当前位置重算横幅位置。
+        // 自动展开也必须执行同一步；头像已随拖图偏移，旧位置会让横幅离头像很远。
+        syncMarkerProperties();
+        updatePositions();
+        expanded = value;
+        if (marker.isVisible()) {
+            animateReveal(value ? 1 : 0, value ? EXPAND_DURATION : COLLAPSE_DURATION);
+        } else {
+            revealProgress = value ? 1 : 0;
         }
     }
 

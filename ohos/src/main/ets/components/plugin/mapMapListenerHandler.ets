@@ -58,6 +58,7 @@ export class MapListenerHandler {
 
     // ---------- Camera ----------
     this.bindCb('cameraMoveStart', (reason: number) => {
+      this.mapUtils.cancelAutoBannerRotation();
       const args: Record<string, Object> = {};
       args[Param.REASON] = reason;
       this.invokeMethod(Method.CAMERA_ON_MOVE_STARTED, args);
@@ -79,6 +80,7 @@ export class MapListenerHandler {
 
     this.bindVoid('cameraIdle', () => {
       this.mapUtils.refreshVisiblePanMarkers();
+      this.mapUtils.scheduleAutoBannerRotation();
       hilog.info(0x0000, TAG, `cameraIdle fired for map ${this.mapId}`);
       this.invokeMethod(Method.CAMERA_ON_IDLE, null);
     });

@@ -70,6 +70,7 @@ Map<String, dynamic> markerToJson(Marker marker) {
     'bannerSubtitle': marker.bannerSubtitle,
     'bannerColor': marker.bannerColor,
     'bannerExpanded': marker.bannerExpanded,
+    'bannerManuallyControlled': marker.bannerManuallyControlled,
     'popOnAppear': marker.popOnAppear,
     'swayOnPan': marker.swayOnPan,
     'maxSwayDegrees': marker.maxSwayDegrees,

@@ -95,6 +95,7 @@ class Marker {
   final String? bannerSubtitle;
   final int? bannerColor;
   final bool bannerExpanded;
+  final bool bannerManuallyControlled;
   final bool popOnAppear;
   final bool swayOnPan;
   final double maxSwayDegrees;
@@ -128,6 +129,7 @@ class Marker {
     this.bannerSubtitle,
     this.bannerColor,
     this.bannerExpanded = false,
+    this.bannerManuallyControlled = false,
     this.popOnAppear = false,
     this.swayOnPan = false,
     this.maxSwayDegrees = 24,
@@ -161,6 +163,7 @@ class Marker {
     String? bannerSubtitle,
     int? bannerColor,
     bool? bannerExpanded,
+    bool? bannerManuallyControlled,
     bool? popOnAppear,
     bool? swayOnPan,
     double? maxSwayDegrees,
@@ -193,6 +196,8 @@ class Marker {
       bannerSubtitle: bannerSubtitle ?? this.bannerSubtitle,
       bannerColor: bannerColor ?? this.bannerColor,
       bannerExpanded: bannerExpanded ?? this.bannerExpanded,
+      bannerManuallyControlled:
+          bannerManuallyControlled ?? this.bannerManuallyControlled,
       popOnAppear: popOnAppear ?? this.popOnAppear,
       swayOnPan: swayOnPan ?? this.swayOnPan,
       maxSwayDegrees: maxSwayDegrees ?? this.maxSwayDegrees,
@@ -233,6 +238,7 @@ class Marker {
         bannerSubtitle == other.bannerSubtitle &&
         bannerColor == other.bannerColor &&
         bannerExpanded == other.bannerExpanded &&
+        bannerManuallyControlled == other.bannerManuallyControlled &&
         popOnAppear == other.popOnAppear &&
         swayOnPan == other.swayOnPan &&
         maxSwayDegrees == other.maxSwayDegrees &&

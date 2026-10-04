@@ -52,6 +52,8 @@ class MapUtils {
 
     void setMarkerPanDirection(int direction) { markersUtils.setPanDirection(direction); }
     void refreshVisiblePanMarkers() { markersUtils.refreshVisiblePanMarkers(); }
+    void cancelAutoBannerRotation() { markersUtils.cancelAutoBannerRotation(); }
+    void scheduleAutoBannerRotation() { markersUtils.scheduleAutoBannerRotation(); }
     void setMarkerGroundPoints(List<?> points, float offset) { markersUtils.setGroundPoints(points, offset); }
     void updateMarkerAppearancePositions() { markersUtils.updateAppearancePositions(); }
     void disposeMarkerAppearances() { markersUtils.disposeAppearances(); }

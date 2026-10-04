@@ -17,6 +17,8 @@
 package com.huawei.hms.flutter.map.marker;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.huawei.hms.flutter.map.constants.Method;
 import com.huawei.hms.flutter.map.constants.Param;
@@ -33,6 +35,8 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +50,13 @@ public class MarkersUtils {
     private static final double PAN_CELL_SIZE = 0.02;
     private final Map<String, Map<String, MarkerController>> panCells = new HashMap<>();
     private final Map<String, String> panCellById = new HashMap<>();
+    private final Handler bannerHandler = new Handler(Looper.getMainLooper());
+    private final List<String> autoBannerQueue = new ArrayList<>();
+    private final List<String> autoBannerBatch = new ArrayList<>();
+    private int autoBannerCursor;
+    private final Runnable startAutoBanners = this::startAutoBannerRotation;
+    private final Runnable nextAutoBannerBatch = this::advanceAutoBannerBatch;
+    private final Runnable closeAutoBannerBatch = this::finishAutoBannerBatch;
 
     private final MethodChannel mChannel;
 
@@ -301,6 +312,14 @@ public class MarkersUtils {
         if (huaweiMap == null || panCells.isEmpty()) return;
         LatLngBounds bounds =
             huaweiMap.getProjection().getVisibleRegion().latLngBounds;
+        for (String id : visiblePanMarkerIds(bounds)) {
+            MarkerController controller = idsOnMap.get(id);
+            if (controller != null) controller.pan(panDirection, animated);
+        }
+    }
+
+    private List<String> visiblePanMarkerIds(LatLngBounds bounds) {
+        List<String> visible = new ArrayList<>();
         int south = cell(bounds.southwest.latitude);
         int north = cell(bounds.northeast.latitude);
         int west = cell(bounds.southwest.longitude);
@@ -310,24 +329,25 @@ public class MarkersUtils {
         // 大视野下遍历已有网格比枚举大量空网格更省时。
         if (cellCount > panCells.size()) {
             for (Map<String, MarkerController> bucket : panCells.values()) {
-                panBucket(bucket, bounds, panDirection, animated);
+                addVisiblePanIds(bucket, bounds, visible);
             }
-            return;
+            return visible;
         }
         for (int lat = south; lat <= north; lat++) {
             if (west <= east) {
                 for (int lon = west; lon <= east; lon++) {
-                    panBucket(panCells.get(lat + ":" + lon), bounds, panDirection, animated);
+                    addVisiblePanIds(panCells.get(lat + ":" + lon), bounds, visible);
                 }
             } else {
                 for (int lon = west; lon <= cell(180); lon++) {
-                    panBucket(panCells.get(lat + ":" + lon), bounds, panDirection, animated);
+                    addVisiblePanIds(panCells.get(lat + ":" + lon), bounds, visible);
                 }
                 for (int lon = cell(-180); lon <= east; lon++) {
-                    panBucket(panCells.get(lat + ":" + lon), bounds, panDirection, animated);
+                    addVisiblePanIds(panCells.get(lat + ":" + lon), bounds, visible);
                 }
             }
         }
+        return visible;
     }
 
     private static int cell(double coordinate) {
@@ -355,11 +375,63 @@ public class MarkersUtils {
         panCellById.put(id, key);
     }
 
-    private static void panBucket(Map<String, MarkerController> bucket,
-                                  LatLngBounds bounds, int direction, boolean animated) {
+    private static void addVisiblePanIds(Map<String, MarkerController> bucket,
+                                         LatLngBounds bounds, List<String> result) {
         if (bucket == null) return;
-        for (MarkerController controller : bucket.values()) {
-            if (bounds.contains(controller.position())) controller.pan(direction, animated);
+        for (Map.Entry<String, MarkerController> entry : bucket.entrySet()) {
+            if (bounds.contains(entry.getValue().position())) result.add(entry.getKey());
+        }
+    }
+
+    /** 地图开始移动时取消旧队列，只收起自动展开的横幅。 */
+    public void cancelAutoBannerRotation() {
+        bannerHandler.removeCallbacks(startAutoBanners);
+        bannerHandler.removeCallbacks(nextAutoBannerBatch);
+        bannerHandler.removeCallbacks(closeAutoBannerBatch);
+        for (String id : autoBannerBatch) {
+            MarkerController controller = idsOnMap.get(id);
+            if (controller != null) controller.setAutoBannerExpanded(false);
+        }
+        autoBannerBatch.clear();
+        autoBannerQueue.clear();
+        autoBannerCursor = 0;
+    }
+
+    public void scheduleAutoBannerRotation() {
+        cancelAutoBannerRotation();
+        bannerHandler.postDelayed(startAutoBanners, 500);
+    }
+
+    private void startAutoBannerRotation() {
+        if (huaweiMap == null) return;
+        autoBannerQueue.addAll(visiblePanMarkerIds(
+            huaweiMap.getProjection().getVisibleRegion().latLngBounds));
+        Collections.sort(autoBannerQueue);
+        advanceAutoBannerBatch();
+    }
+
+    private void advanceAutoBannerBatch() {
+        while (autoBannerBatch.size() < 3 && autoBannerCursor < autoBannerQueue.size()) {
+            String id = autoBannerQueue.get(autoBannerCursor++);
+            MarkerController controller = idsOnMap.get(id);
+            if (controller == null || !controller.eligibleForAutoBanner()) continue;
+            controller.setAutoBannerExpanded(true);
+            autoBannerBatch.add(id);
+        }
+        if (!autoBannerBatch.isEmpty()) {
+            bannerHandler.postDelayed(closeAutoBannerBatch, 4000);
+        }
+    }
+
+    private void finishAutoBannerBatch() {
+        for (String id : autoBannerBatch) {
+            MarkerController controller = idsOnMap.get(id);
+            if (controller != null) controller.setAutoBannerExpanded(false);
+        }
+        autoBannerBatch.clear();
+        if (autoBannerCursor < autoBannerQueue.size()) {
+            // 留出收起动画时间，保证屏幕上同时展开的横幅不超过 3 个。
+            bannerHandler.postDelayed(nextAutoBannerBatch, 500);
         }
     }
 
@@ -387,6 +459,7 @@ public class MarkersUtils {
     }
 
     public void disposeAppearances() {
+        cancelAutoBannerRotation();
         for (MarkerController controller : idsOnMap.values()) controller.disposeAppearance();
         panCells.clear();
         panCellById.clear();

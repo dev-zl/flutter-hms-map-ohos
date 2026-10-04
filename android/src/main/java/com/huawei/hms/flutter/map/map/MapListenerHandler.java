@@ -226,6 +226,7 @@ public class MapListenerHandler implements MapListener {
     public void onCameraIdle() {
         mapUtils.updateMarkerAppearancePositions();
         mapUtils.refreshVisiblePanMarkers();
+        mapUtils.scheduleAutoBannerRotation();
         onCameraIdle.run();
         logger.startMethodExecutionTimer(Method.CAMERA_ON_IDLE);
         mChannel.invokeMethod(Method.CAMERA_ON_IDLE, Collections.singletonMap(Param.MAP, id));
@@ -234,6 +235,7 @@ public class MapListenerHandler implements MapListener {
 
     @Override
     public void onCameraMoveStarted(final int reason) {
+        mapUtils.cancelAutoBannerRotation();
         onCameraMoveStarted.run();
         logger.startMethodExecutionTimer(Method.CAMERA_ON_MOVE_STARTED);
         final Map<String, Object> arguments = new HashMap<>();

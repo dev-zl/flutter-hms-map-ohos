@@ -63,12 +63,22 @@ export class MarkerController {
   private direction: number = -1;
   private panEnabled: boolean = false;
   private panVisible: boolean = false;
+  private showAnchorDot: boolean = false;
+  private bannerManuallyControlled: boolean = false;
+  private bannerExpanded: boolean = false;
+  private hasBannerText: boolean = false;
   private deleted: boolean = false;
   private iconRevision: number = 0;
 
   configureAppearance(data: Record<string, Object>, groundOffset: number, direction: number): void {
     this.groundOffset = groundOffset; this.direction = direction;
     const options = data['appearance'] as Record<string, Object> | undefined;
+    this.showAnchorDot = options?.['showAnchorDot'] === true;
+    this.bannerManuallyControlled = options?.['bannerManuallyControlled'] === true;
+    this.bannerExpanded = options?.['bannerExpanded'] === true;
+    this.hasBannerText = typeof options?.['bannerTitle'] === 'string' &&
+      (options['bannerTitle'] as string).length > 0 ||
+      typeof options?.['bannerSubtitle'] === 'string' && (options['bannerSubtitle'] as string).length > 0;
     this.panEnabled = options?.['showAnchorDot'] === true || options?.['swayOnPan'] === true ||
       options?.['bannerExpanded'] === true;
     // 业务隐藏或透明时不进原生视野索引；放大后显示会重新配置并入索引。
@@ -85,6 +95,11 @@ export class MarkerController {
   }
   pan(direction: number, animated: boolean = true): void { this.direction = direction; this.appearance?.pan(direction, animated); }
   needsPanUpdate(): boolean { return this.panEnabled && this.panVisible; }
+  eligibleForAutoBanner(): boolean {
+    return this.showAnchorDot && this.panVisible && this.hasBannerText &&
+      !this.bannerManuallyControlled && !this.bannerExpanded && this.appearance !== null;
+  }
+  setAutoBannerExpanded(expanded: boolean): void { this.appearance?.setAutoBannerExpanded(expanded); }
   setGroundOffset(value: number): void { this.groundOffset = value; this.appearance?.setGroundOffset(value); }
 
   private ctx: common.UIAbilityContext | null;
