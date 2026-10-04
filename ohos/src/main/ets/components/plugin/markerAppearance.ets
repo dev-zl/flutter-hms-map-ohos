@@ -204,7 +204,7 @@ export class MarkerAppearance {
     measure.font = '13px sans-serif';
     const textW = Math.min(150, Math.max(40, titleW, measure.measureText(subtitle).width));
     const extension = this.hasText() ? 6 + textW + 12 : 0, grow = extension * this.expansion;
-    const capsuleH = Math.max(h + 4, 56);
+    const capsuleH = h;
     const contentLeft = this.contentBounds.left / this.density;
     const contentTop = this.contentBounds.top / this.density;
     const contentWidth = (this.contentBounds.right - this.contentBounds.left) / this.density;
