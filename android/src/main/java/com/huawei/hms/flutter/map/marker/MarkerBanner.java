@@ -151,9 +151,30 @@ final class MarkerBanner {
 
     void setAutoExpanded(boolean value) {
         if (disposed || expanded == value) return;
+        // 自动轮播不承接上一次左右切换的中间位置；先停止旧动画，
+        // 避免旧回调继续移动横幅，或把另一侧横幅重新显示出来。
+        if (positionAnimator != null) {
+            positionAnimator.removeAllUpdateListeners();
+            positionAnimator.removeAllListeners();
+            positionAnimator.cancel();
+            positionAnimator = null;
+        }
+        if (revealAnimator != null) {
+            ValueAnimator previous = revealAnimator;
+            revealAnimator = null;
+            previous.cancel();
+        }
+        switching = false;
+        otherBanner(direction).setVisible(false);
+        // 每次自动展开都从头像处重新揭开，并恢复当前方向的图片锚点。
+        // 只更新位置不足以清除旧的切换状态和展开进度。
+        if (value) revealProgress = 0;
+        restoreArtwork(banner(direction), direction);
+        syncMarkerProperties();
+        updatePositions();
         expanded = value;
         if (marker.isVisible()) {
-            animateReveal(value ? 1 : 0, value ? EXPAND_DURATION : COLLAPSE_DURATION);
+            animateReveal(value ? 1 : 0, value ? EXPAND_DURATION : COLLAPSE_DURATION, true);
         } else {
             revealProgress = value ? 1 : 0;
         }
@@ -378,6 +399,10 @@ final class MarkerBanner {
     }
 
     private void animateReveal(float targetProgress, long duration) {
+        animateReveal(targetProgress, duration, false);
+    }
+
+    private void animateReveal(float targetProgress, long duration, boolean followMarker) {
         if (revealAnimator != null) {
             ValueAnimator previous = revealAnimator;
             revealAnimator = null;
@@ -392,6 +417,9 @@ final class MarkerBanner {
         animator.setDuration(duration);
         animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.addUpdateListener(value -> {
+            // 自动收起可能与头像的 450ms 左右偏移动画重叠，逐帧跟随真实头像位置。
+            // 仅作用于当前自动横幅，不扫描标记集合；手动展开沿用原行为。
+            if (followMarker) updatePositions();
             revealProgress = (float) value.getAnimatedValue();
             target.setIcon(BitmapDescriptorFactory.fromBitmap(
                 drawBanner(direction > 0, revealProgress).bitmap));
