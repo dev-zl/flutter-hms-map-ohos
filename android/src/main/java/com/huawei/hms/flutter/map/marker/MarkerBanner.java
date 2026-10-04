@@ -151,10 +151,6 @@ final class MarkerBanner {
 
     void setAutoExpanded(boolean value) {
         if (disposed || expanded == value) return;
-        // 手动展开会先在 configure 中根据头像当前位置重算横幅位置。
-        // 自动展开也必须执行同一步；头像已随拖图偏移，旧位置会让横幅离头像很远。
-        syncMarkerProperties();
-        updatePositions();
         expanded = value;
         if (marker.isVisible()) {
             animateReveal(value ? 1 : 0, value ? EXPAND_DURATION : COLLAPSE_DURATION);
