@@ -178,22 +178,13 @@ export class MarkerAppearance {
     while (result.length > 0 && context.measureText(result + '…').width > width) result = result.slice(0, -1);
     return result + '…';
   }
-  private capsule(context: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number,
-    exposedRight: boolean): void {
-    // Keep the exposed end as a full-height semicircle from the first frame.
-    const exposedRadius = Math.min(h / 2, w);
-    const innerRadius = Math.min(h / 2, Math.max(0, w - exposedRadius));
-    const leftRadius = exposedRight ? innerRadius : exposedRadius;
-    const rightRadius = exposedRight ? exposedRadius : innerRadius;
-    context.beginPath(); context.moveTo(x + leftRadius, y);
-    context.lineTo(x + w - rightRadius, y);
-    context.arcTo(x + w, y, x + w, y + rightRadius, rightRadius);
-    context.lineTo(x + w, y + h - rightRadius);
-    context.arcTo(x + w, y + h, x + w - rightRadius, y + h, rightRadius);
-    context.lineTo(x + leftRadius, y + h);
-    context.arcTo(x, y + h, x, y + h - leftRadius, leftRadius);
-    context.lineTo(x, y + leftRadius);
-    context.arcTo(x, y, x + leftRadius, y, leftRadius);
+  private capsule(context: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+    const r = h / 2;
+    context.beginPath(); context.moveTo(x + r, y);
+    context.arcTo(x + w, y, x + w, y + h, r);
+    context.arcTo(x + w, y + h, x, y + h, r);
+    context.arcTo(x, y + h, x, y, r);
+    context.arcTo(x, y, x + w, y, r);
     context.closePath(); context.fill();
   }
   private async render(): Promise<void> {
@@ -242,11 +233,10 @@ export class MarkerAppearance {
     const lineFraction = (this.groundOffset - dotY) / (this.groundOffset - centerY);
     const dotX = centerX * lineFraction;
     const rightWeight = (1 + this.direction) / 2;
-    const startWidth = Math.max(1, w - 20);
-    const startRightLeft = left + w * 0.3;
-    const startLeftRight = left + w * 0.7;
-    const startLeft = rightWeight * startRightLeft + (1 - rightWeight) * (startLeftRight - startWidth);
-    const startRight = startLeft + startWidth;
+    // A full-height end cap needs a full-height starting circle behind the avatar.
+    const startCenter = visibleLeft + contentWidth / 2;
+    const startLeft = startCenter - capsuleH / 2;
+    const startRight = startCenter + capsuleH / 2;
     const finalLeft = rightWeight * visibleLeft + (1 - rightWeight) * (left - 4 - extension);
     const finalRight = rightWeight * (left + w + 4 + extension) + (1 - rightWeight) * visibleRight;
     const bannerLeft = startLeft + (finalLeft - startLeft) * this.expansion;
@@ -254,7 +244,7 @@ export class MarkerAppearance {
     const bannerTop = top + (h - capsuleH) / 2;
     // Keep texture dimensions and anchor stable throughout each transition.
     const expanded = this.expansion > 0 || this.expansionTarget() > 0;
-    const extra = expanded ? Math.max(extension + 4, startWidth - w * 0.7 + 4) : 0;
+    const extra = expanded ? extension + 4 : 0;
     const endpointCenterLeft = dot ? -markerTravel - leftTravelExtra - ox : -shiftAmplitude + centerOffsetX;
     const endpointCenterRight = dot ? markerTravel - ox : shiftAmplitude + centerOffsetX;
     const endpointMarkerLeft = endpointCenterLeft - centerOffsetX - w * this.anchorX;
@@ -276,7 +266,7 @@ export class MarkerAppearance {
     context.save(); context.scale(this.scale, this.scale);
     if (this.expansion > 0 && this.hasText()) {
       context.fillStyle = this.color('bannerColor', 0xFFFFC200);
-      this.capsule(context, bannerLeft, bannerTop, bannerRight - bannerLeft, capsuleH, this.direction >= 0);
+      this.capsule(context, bannerLeft, bannerTop, bannerRight - bannerLeft, capsuleH);
       const textX = left + (1 + this.direction) / 2 * (w + 6) - (1 - this.direction) / 2 * (textW + 6);
       const textH = (title.length > 0 ? 14 : 0) + (subtitle.length > 0 ? 16 : 0) + (title.length > 0 && subtitle.length > 0 ? 2 : 0);
       let textY = bannerTop + (capsuleH - textH) / 2;
