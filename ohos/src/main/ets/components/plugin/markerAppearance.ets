@@ -178,13 +178,23 @@ export class MarkerAppearance {
     while (result.length > 0 && context.measureText(result + '…').width > width) result = result.slice(0, -1);
     return result + '…';
   }
-  private capsule(context: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
-    const r = Math.min(w, h) / 2;
-    context.beginPath(); context.moveTo(x + r, y);
-    context.arcTo(x + w, y, x + w, y + h, r);
-    context.arcTo(x + w, y + h, x, y + h, r);
-    context.arcTo(x, y + h, x, y, r);
-    context.arcTo(x, y, x + w, y, r); context.closePath(); context.fill();
+  private capsule(context: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    exposedRight: boolean): void {
+    // Keep the exposed end as a full-height semicircle from the first frame.
+    const exposedRadius = Math.min(h / 2, w);
+    const innerRadius = Math.min(h / 2, Math.max(0, w - exposedRadius));
+    const leftRadius = exposedRight ? innerRadius : exposedRadius;
+    const rightRadius = exposedRight ? exposedRadius : innerRadius;
+    context.beginPath(); context.moveTo(x + leftRadius, y);
+    context.lineTo(x + w - rightRadius, y);
+    context.arcTo(x + w, y, x + w, y + rightRadius, rightRadius);
+    context.lineTo(x + w, y + h - rightRadius);
+    context.arcTo(x + w, y + h, x + w - rightRadius, y + h, rightRadius);
+    context.lineTo(x + leftRadius, y + h);
+    context.arcTo(x, y + h, x, y + h - leftRadius, leftRadius);
+    context.lineTo(x, y + leftRadius);
+    context.arcTo(x, y, x + leftRadius, y, leftRadius);
+    context.closePath(); context.fill();
   }
   private async render(): Promise<void> {
     if (!this.icon) return;
@@ -203,7 +213,7 @@ export class MarkerAppearance {
     measure.font = 'bold 11px sans-serif'; const titleW = measure.measureText(title).width;
     measure.font = '13px sans-serif';
     const textW = Math.min(150, Math.max(40, titleW, measure.measureText(subtitle).width));
-    const extension = this.hasText() ? 6 + textW + 12 : 0, grow = extension * this.expansion;
+    const extension = this.hasText() ? 6 + textW + 12 : 0;
     const capsuleH = h;
     const contentLeft = this.contentBounds.left / this.density;
     const contentTop = this.contentBounds.top / this.density;
@@ -225,14 +235,26 @@ export class MarkerAppearance {
     const markerY = centerY - centerOffsetY;
     const left = markerX - w * this.anchorX;
     const top = markerY - h * this.anchorY;
+    const visibleLeft = left + contentLeft;
+    const visibleRight = visibleLeft + contentWidth;
 
     const dotY = -dotSize / 3 - verticalLift + 4 / this.density;
     const lineFraction = (this.groundOffset - dotY) / (this.groundOffset - centerY);
     const dotX = centerX * lineFraction;
-    const bannerLeft = left - 4 - (1 - this.direction) / 2 * grow, bannerTop = top + (h - capsuleH) / 2;
+    const rightWeight = (1 + this.direction) / 2;
+    const startWidth = Math.max(1, w - 20);
+    const startRightLeft = left + w * 0.3;
+    const startLeftRight = left + w * 0.7;
+    const startLeft = rightWeight * startRightLeft + (1 - rightWeight) * (startLeftRight - startWidth);
+    const startRight = startLeft + startWidth;
+    const finalLeft = rightWeight * visibleLeft + (1 - rightWeight) * (left - 4 - extension);
+    const finalRight = rightWeight * (left + w + 4 + extension) + (1 - rightWeight) * visibleRight;
+    const bannerLeft = startLeft + (finalLeft - startLeft) * this.expansion;
+    const bannerRight = startRight + (finalRight - startRight) * this.expansion;
+    const bannerTop = top + (h - capsuleH) / 2;
     // Keep texture dimensions and anchor stable throughout each transition.
     const expanded = this.expansion > 0 || this.expansionTarget() > 0;
-    const extra = expanded ? extension + 4 : 0;
+    const extra = expanded ? Math.max(extension + 4, startWidth - w * 0.7 + 4) : 0;
     const endpointCenterLeft = dot ? -markerTravel - leftTravelExtra - ox : -shiftAmplitude + centerOffsetX;
     const endpointCenterRight = dot ? markerTravel - ox : shiftAmplitude + centerOffsetX;
     const endpointMarkerLeft = endpointCenterLeft - centerOffsetX - w * this.anchorX;
@@ -252,14 +274,15 @@ export class MarkerAppearance {
       context.beginPath(); context.arc(dotX, dotY, dotSize / 2, 0, Math.PI * 2); context.fill();
     }
     context.save(); context.scale(this.scale, this.scale);
-    if (grow > 0 && this.hasText()) {
+    if (this.expansion > 0 && this.hasText()) {
       context.fillStyle = this.color('bannerColor', 0xFFFFC200);
-      this.capsule(context, bannerLeft, bannerTop, w + 8 + grow, capsuleH);
+      this.capsule(context, bannerLeft, bannerTop, bannerRight - bannerLeft, capsuleH, this.direction >= 0);
       const textX = left + (1 + this.direction) / 2 * (w + 6) - (1 - this.direction) / 2 * (textW + 6);
       const textH = (title.length > 0 ? 14 : 0) + (subtitle.length > 0 ? 16 : 0) + (title.length > 0 && subtitle.length > 0 ? 2 : 0);
       let textY = bannerTop + (capsuleH - textH) / 2;
-      context.save(); context.beginPath(); context.rect(bannerLeft, bannerTop, w + 8 + grow, capsuleH); context.clip();
-      context.fillStyle = '#FFFFFF'; context.globalAlpha = this.expansion;
+      context.save(); context.beginPath(); context.rect(bannerLeft, bannerTop, bannerRight - bannerLeft, capsuleH); context.clip();
+      context.fillStyle = '#FFFFFF';
+      context.globalAlpha = Math.max(0, Math.min(1, (this.expansion - 0.3) / 0.5));
       if (title.length > 0) { context.font = 'bold 11px sans-serif'; context.fillText(this.fit(context, title, textW), textX, textY + 11); textY += 16; }
       if (subtitle.length > 0) { context.font = '13px sans-serif'; context.fillText(this.fit(context, subtitle, textW), textX, textY + 13); }
       context.restore();
