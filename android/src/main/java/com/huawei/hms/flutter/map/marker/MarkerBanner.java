@@ -40,7 +40,6 @@ final class MarkerBanner {
     private static final float RIGHT_EXTRA_WIDTH_PX = 20;
     private static final float EXTRA_HEIGHT_PX = 32;
     private static final float TEXT_GAP = 6;
-    private static final int BANNER_VERTICAL_OFFSET_PX = 21;
     private static final int LEFT_CAP_ALIGNMENT_PX = 12;
     private static final int RIGHT_CAP_ALIGNMENT_PX = 44;
 
@@ -267,13 +266,16 @@ final class MarkerBanner {
         leftWidthPx = leftArtwork.capsuleWidthPx;
         rightWidthPx = rightArtwork.capsuleWidthPx;
         if (revealAnimator != null) {
-            banner(direction).setIcon(BitmapDescriptorFactory.fromBitmap(
-                drawBanner(direction > 0, revealProgress).bitmap));
+            applyArtwork(banner(direction), drawBanner(direction > 0, revealProgress));
         }
     }
 
     private void restoreArtwork(Marker target, int value) {
         BannerBitmap artwork = value > 0 ? rightArtwork : leftArtwork;
+        applyArtwork(target, artwork);
+    }
+
+    private void applyArtwork(Marker target, BannerBitmap artwork) {
         target.setIcon(BitmapDescriptorFactory.fromBitmap(artwork.bitmap));
         target.setMarkerAnchor(artwork.anchorX, artwork.anchorY);
     }
@@ -293,7 +295,7 @@ final class MarkerBanner {
         float subtitleHeight = subtitle.isEmpty() ? 0 : 16;
         float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 : 0) + subtitleHeight;
         textHeight = Math.max(textHeight, 20);
-        float capsuleHeight = Math.max(iconHeight + 4, 56) + EXTRA_HEIGHT_PX / density;
+        float capsuleHeight = (iconHeight + 5) + EXTRA_HEIGHT_PX / density;
         float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
         int capsuleWidthPx = Math.max(1, Math.round(width * density));
         int revealOverhangPx = Math.max(0, Math.round((capsuleHeight - iconWidth) * density / 2
@@ -348,7 +350,7 @@ final class MarkerBanner {
 
         return new BannerBitmap(bitmap,
             (markerX + anchorX * iconWidth) / (bitmapWidth / density),
-            ((capsuleHeight - iconHeight) / 2 + anchorY * iconHeight) / capsuleHeight,
+            .5f,
             capsuleWidthPx);
     }
 
@@ -380,7 +382,8 @@ final class MarkerBanner {
         LatLng position = marker.getPosition();
         Projection projection = map.getProjection();
         Point base = projection.toScreenLocation(position);
-        int bannerY = base.y - BANNER_VERTICAL_OFFSET_PX;
+        // 横幅以自身中心为锚点，直接定位到头像的屏幕中心。
+        int bannerY = Math.round(base.y + (.5f - anchorY) * iconHeight * density);
         if (!switching) {
             leftBanner.setPosition(projection.fromScreenLocation(new Point(
                 base.x - LEFT_CAP_ALIGNMENT_PX, bannerY)));
@@ -409,8 +412,7 @@ final class MarkerBanner {
             previous.cancel();
         }
         Marker target = banner(direction);
-        target.setIcon(BitmapDescriptorFactory.fromBitmap(
-            drawBanner(direction > 0, revealProgress).bitmap));
+        applyArtwork(target, drawBanner(direction > 0, revealProgress));
         target.setVisible(marker.isVisible());
         ValueAnimator animator = ValueAnimator.ofFloat(revealProgress, targetProgress);
         revealAnimator = animator;
@@ -421,8 +423,7 @@ final class MarkerBanner {
             // 仅作用于当前自动横幅，不扫描标记集合；手动展开沿用原行为。
             if (followMarker) updatePositions();
             revealProgress = (float) value.getAnimatedValue();
-            target.setIcon(BitmapDescriptorFactory.fromBitmap(
-                drawBanner(direction > 0, revealProgress).bitmap));
+            applyArtwork(target, drawBanner(direction > 0, revealProgress));
         });
         animator.addListener(new AnimatorListenerAdapter() {
             @Override public void onAnimationEnd(Animator animation) {
