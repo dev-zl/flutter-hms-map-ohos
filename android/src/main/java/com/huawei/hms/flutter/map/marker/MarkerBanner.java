@@ -295,7 +295,7 @@ final class MarkerBanner {
         float subtitleHeight = subtitle.isEmpty() ? 0 : 16;
         float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 : 0) + subtitleHeight;
         textHeight = Math.max(textHeight, 20);
-        float capsuleHeight = (iconHeight + 5) + EXTRA_HEIGHT_PX / density;
+        float capsuleHeight = (iconHeight + 5.7f) + EXTRA_HEIGHT_PX / density;
         float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
         int capsuleWidthPx = Math.max(1, Math.round(width * density));
         int revealOverhangPx = Math.max(0, Math.round((capsuleHeight - iconWidth) * density / 2
