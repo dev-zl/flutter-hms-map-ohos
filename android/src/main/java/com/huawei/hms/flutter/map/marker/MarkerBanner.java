@@ -281,53 +281,55 @@ final class MarkerBanner {
     }
 
     private BannerBitmap drawBanner(boolean toRight, float progress) {
-        float markerMargin = MARKER_MARGIN_PX / density;
-        TextPaint titlePaint = textPaint(10, true);
-        TextPaint subtitlePaint = textPaint(12, false);
+        float markerMargin = MARKER_MARGIN_PX;
+        float iconWidthPx = iconWidth * density;
+        float iconHeightPx = iconHeight * density;
+        float textGap = TEXT_GAP * density;
+        float horizontalPadding = HORIZONTAL_PADDING * density;
+        TextPaint titlePaint = textPaint(10 * density, true);
+        TextPaint subtitlePaint = textPaint(12 * density, false);
         float titleWidth = title.isEmpty() ? 0 : titlePaint.measureText(title);
         float subtitleWidth = subtitle.isEmpty() ? 0 : subtitlePaint.measureText(subtitle);
-        float availableTextWidth = MAX_BITMAP_WIDTH_PX / density
-            - markerMargin - iconWidth - TEXT_GAP - HORIZONTAL_PADDING;
+        float availableTextWidth = MAX_BITMAP_WIDTH_PX
+            - markerMargin - iconWidthPx - textGap - horizontalPadding;
         float textWidth = Math.min(Math.max(0, availableTextWidth),
-            Math.min(MAX_TEXT_WIDTH, Math.max(40, Math.max(titleWidth, subtitleWidth))))
-            + (EXTRA_WIDTH_PX + (toRight ? RIGHT_EXTRA_WIDTH_PX : 0)) / density;
-        float titleHeight = title.isEmpty() ? 0 : 14;
-        float subtitleHeight = subtitle.isEmpty() ? 0 : 16;
-        float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 : 0) + subtitleHeight;
-        textHeight = Math.max(textHeight, 20);
-        float capsuleHeight = (iconHeight + 5.7f) + EXTRA_HEIGHT_PX / density;
-        float width = markerMargin + iconWidth + TEXT_GAP + textWidth + HORIZONTAL_PADDING;
-        int capsuleWidthPx = Math.max(1, Math.round(width * density));
-        int revealOverhangPx = Math.max(0, Math.round((capsuleHeight - iconWidth) * density / 2
+            Math.min(MAX_TEXT_WIDTH * density, Math.max(40 * density, Math.max(titleWidth, subtitleWidth))))
+            + EXTRA_WIDTH_PX + (toRight ? RIGHT_EXTRA_WIDTH_PX : 0);
+        float titleHeight = title.isEmpty() ? 0 : 14 * density;
+        float subtitleHeight = subtitle.isEmpty() ? 0 : 16 * density;
+        float textHeight = titleHeight + (titleHeight > 0 && subtitleHeight > 0 ? 2 * density : 0) + subtitleHeight;
+        textHeight = Math.max(textHeight, 20 * density);
+        float capsuleHeight = iconHeightPx + 5.7f * density + EXTRA_HEIGHT_PX;
+        float width = markerMargin + iconWidthPx + textGap + textWidth + horizontalPadding;
+        int capsuleWidthPx = Math.max(1, Math.round(width));
+        int revealOverhangPx = Math.max(0, Math.round((capsuleHeight - iconWidthPx) / 2
             - MARKER_MARGIN_PX));
         int leftPaddingPx = toRight ? revealOverhangPx : Math.round(RIGHT_EXTRA_WIDTH_PX);
         int bitmapWidth = capsuleWidthPx + leftPaddingPx + (toRight ? 0 : revealOverhangPx);
-        float startX = leftPaddingPx / density;
-        float capsuleWidth = capsuleWidthPx / density;
-        int bitmapHeight = Math.max(1, Math.round(capsuleHeight * density));
+        float startX = leftPaddingPx;
+        int bitmapHeight = Math.max(1, Math.round(capsuleHeight));
         Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
-        canvas.scale(density, density);
 
         Paint background = new Paint(Paint.ANTI_ALIAS_FLAG);
         background.setColor(color);
         float markerX = toRight
             ? startX + markerMargin
-            : startX + capsuleWidth - markerMargin - iconWidth;
-        float centerX = markerX + iconWidth / 2;
+            : startX + capsuleWidthPx - markerMargin - iconWidthPx;
+        float centerX = markerX + iconWidthPx / 2;
         float left = centerX - capsuleHeight / 2
             + (startX - centerX + capsuleHeight / 2) * progress;
         float right = centerX + capsuleHeight / 2
-            + (startX + capsuleWidth - centerX - capsuleHeight / 2) * progress;
+            + (startX + capsuleWidthPx - centerX - capsuleHeight / 2) * progress;
         RectF capsule = new RectF(left, 0, right, capsuleHeight);
         canvas.drawRoundRect(capsule,
             capsuleHeight / 2, capsuleHeight / 2, background);
 
         float textX = toRight
-            ? markerX + iconWidth + TEXT_GAP + RIGHT_CAP_ALIGNMENT_PX / density
-            : startX + HORIZONTAL_PADDING;
+            ? markerX + iconWidthPx + textGap + RIGHT_CAP_ALIGNMENT_PX
+            : startX + horizontalPadding;
         float lineWidth = toRight
-            ? Math.min(textWidth, startX + capsuleWidth - textX - markerMargin)
+            ? Math.min(textWidth, startX + capsuleWidthPx - textX - markerMargin)
             : textWidth;
         int textAlpha = Math.round(255 * Math.max(0, Math.min(1, (progress - .3f) / .5f)));
         titlePaint.setAlpha(textAlpha);
@@ -340,7 +342,7 @@ final class MarkerBanner {
         if (!title.isEmpty()) {
             String line = ellipsize(title, titlePaint, lineWidth);
             canvas.drawText(line, textX, textTop - titlePaint.ascent(), titlePaint);
-            textTop += titleHeight + (subtitle.isEmpty() ? 0 : 2);
+            textTop += titleHeight + (subtitle.isEmpty() ? 0 : 2 * density);
         }
         if (!subtitle.isEmpty()) {
             String line = ellipsize(subtitle, subtitlePaint, lineWidth);
@@ -349,7 +351,7 @@ final class MarkerBanner {
         canvas.restore();
 
         return new BannerBitmap(bitmap,
-            (markerX + anchorX * iconWidth) / (bitmapWidth / density),
+            (markerX + anchorX * iconWidthPx) / bitmapWidth,
             .5f,
             capsuleWidthPx);
     }
