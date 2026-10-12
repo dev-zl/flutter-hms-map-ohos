@@ -33,6 +33,7 @@ final class MarkerBanner {
     private static final long COLLAPSE_DURATION = 240;
     private static final long DIRECTION_DURATION = 450;
     private static final float MAX_TEXT_WIDTH = 120;
+    // HMS Maps 会将任一边超过 512px 的 Marker bitmap 整体等比缩小，继续加宽也会同时压低高度。
     private static final float MAX_BITMAP_WIDTH_PX = 576;
     private static final float HORIZONTAL_PADDING = 12;
     private static final float MARKER_MARGIN_PX = 4;
