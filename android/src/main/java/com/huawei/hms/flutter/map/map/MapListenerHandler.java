@@ -212,6 +212,7 @@ public class MapListenerHandler implements MapListener {
     @Override
     public void onCameraMove() {
         mapUtils.updateMarkerAppearancePositions();
+        mapUtils.pruneAutoBannerBatch();
         if (!trackCameraPosition) {
             return;
         }

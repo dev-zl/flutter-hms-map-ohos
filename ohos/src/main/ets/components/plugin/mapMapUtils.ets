@@ -175,16 +175,34 @@ export class MapUtils implements MethodCallHandler {
     });
   }
 
-  /** 开始移动时取消旧队列，只收起自动展开的横幅。 */
+  /** 地图移动时清空待播放队列；视野内已展开的横幅继续计时。 */
   cancelAutoBannerRotation(): void {
     if (this.autoBannerStartTimer >= 0) clearTimeout(this.autoBannerStartTimer);
-    if (this.autoBannerBatchTimer >= 0) clearTimeout(this.autoBannerBatchTimer);
     this.autoBannerStartTimer = -1;
-    this.autoBannerBatchTimer = -1;
-    for (const id of this.autoBannerBatch) this.markerControllers.get(id)?.setAutoBannerExpanded(false);
-    this.autoBannerBatch = [];
     this.autoBannerQueue = [];
     this.autoBannerCursor = 0;
+    this.pruneAutoBannerBatch();
+  }
+  /** 移动时只检查当前展开的最多 3 个标记，离开视野或业务隐藏才收起。 */
+  pruneAutoBannerBatch(): void {
+    if (this.autoBannerBatch.length === 0) {
+      if (this.autoBannerBatchTimer >= 0) clearTimeout(this.autoBannerBatchTimer);
+      this.autoBannerBatchTimer = -1;
+      return;
+    }
+    const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
+    if (!bounds) return;
+    this.autoBannerBatch = this.autoBannerBatch.filter((id: string) => {
+      const controller = this.markerControllers.get(id);
+      const visible = controller?.eligibleForAutoBanner() === true &&
+        map.LatLngBoundsUtils.contains(bounds, controller.getPosition());
+      if (!visible) controller?.setAutoBannerExpanded(false);
+      return visible;
+    });
+    if (this.autoBannerBatch.length === 0) {
+      if (this.autoBannerBatchTimer >= 0) clearTimeout(this.autoBannerBatchTimer);
+      this.autoBannerBatchTimer = -1;
+    }
   }
   scheduleAutoBannerRotation(): void {
     this.cancelAutoBannerRotation();
@@ -192,15 +210,19 @@ export class MapUtils implements MethodCallHandler {
       this.autoBannerStartTimer = -1;
       const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
       if (!bounds) return;
-      this.autoBannerQueue = this.visiblePanMarkerIds(bounds).sort();
-      this.advanceAutoBannerBatch();
+      this.autoBannerQueue = this.visiblePanMarkerIds(bounds)
+        .filter((id: string) => !this.autoBannerBatch.includes(id)).sort();
+      if (this.autoBannerBatch.length === 0) this.advanceAutoBannerBatch();
     }, 500);
   }
   private advanceAutoBannerBatch(): void {
+    const bounds = this.mapController?.getProjection().getVisibleRegion().bounds;
+    if (!bounds) return;
     while (this.autoBannerBatch.length < 3 && this.autoBannerCursor < this.autoBannerQueue.length) {
       const id = this.autoBannerQueue[this.autoBannerCursor++];
       const controller = this.markerControllers.get(id);
-      if (!controller?.eligibleForAutoBanner()) continue;
+      if (!controller?.eligibleForAutoBanner() ||
+        !map.LatLngBoundsUtils.contains(bounds, controller.getPosition())) continue;
       controller.setAutoBannerExpanded(true);
       this.autoBannerBatch.push(id);
     }
@@ -1113,6 +1135,9 @@ export class MapUtils implements MethodCallHandler {
 
   dispose(): void {
     this.cancelAutoBannerRotation();
+    if (this.autoBannerBatchTimer >= 0) clearTimeout(this.autoBannerBatchTimer);
+    this.autoBannerBatchTimer = -1;
+    this.autoBannerBatch = [];
     this.massPointOverlays.forEach((overlay: map.MassPointOverlay) => {
       try { overlay.remove(); } catch (e) { /* ignore */ }
     });

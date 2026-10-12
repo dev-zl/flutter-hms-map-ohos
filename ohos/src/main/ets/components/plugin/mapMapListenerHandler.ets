@@ -65,6 +65,7 @@ export class MapListenerHandler {
     });
 
     this.bindVoid('cameraMove', () => {
+      this.mapUtils.pruneAutoBannerBatch();
       if (!this.trackCameraPosition) return;
       try {
         const cp = this.mapUtils.getCameraPosition();

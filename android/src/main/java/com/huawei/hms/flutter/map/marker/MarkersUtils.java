@@ -383,18 +383,27 @@ public class MarkersUtils {
         }
     }
 
-    /** 地图开始移动时取消旧队列，只收起自动展开的横幅。 */
+    /** 地图移动时只清空待播放队列；视野内已展开的横幅继续计时。 */
     public void cancelAutoBannerRotation() {
         bannerHandler.removeCallbacks(startAutoBanners);
         bannerHandler.removeCallbacks(nextAutoBannerBatch);
-        bannerHandler.removeCallbacks(closeAutoBannerBatch);
-        for (String id : autoBannerBatch) {
-            MarkerController controller = idsOnMap.get(id);
-            if (controller != null) controller.setAutoBannerExpanded(false);
-        }
-        autoBannerBatch.clear();
         autoBannerQueue.clear();
         autoBannerCursor = 0;
+        pruneAutoBannerBatch();
+    }
+
+    /** 每帧只检查当前展开的最多 3 个标记；业务隐藏或离开视野才提前收起。 */
+    public void pruneAutoBannerBatch() {
+        if (huaweiMap == null || autoBannerBatch.isEmpty()) return;
+        LatLngBounds bounds = huaweiMap.getProjection().getVisibleRegion().latLngBounds;
+        autoBannerBatch.removeIf(id -> {
+            MarkerController controller = idsOnMap.get(id);
+            boolean visible = controller != null && controller.eligibleForAutoBanner()
+                && bounds.contains(controller.position());
+            if (!visible && controller != null) controller.setAutoBannerExpanded(false);
+            return !visible;
+        });
+        if (autoBannerBatch.isEmpty()) bannerHandler.removeCallbacks(closeAutoBannerBatch);
     }
 
     public void scheduleAutoBannerRotation() {
@@ -406,15 +415,18 @@ public class MarkersUtils {
         if (huaweiMap == null) return;
         autoBannerQueue.addAll(visiblePanMarkerIds(
             huaweiMap.getProjection().getVisibleRegion().latLngBounds));
+        autoBannerQueue.removeAll(autoBannerBatch);
         Collections.sort(autoBannerQueue);
-        advanceAutoBannerBatch();
+        if (autoBannerBatch.isEmpty()) advanceAutoBannerBatch();
     }
 
     private void advanceAutoBannerBatch() {
+        LatLngBounds bounds = huaweiMap.getProjection().getVisibleRegion().latLngBounds;
         while (autoBannerBatch.size() < 3 && autoBannerCursor < autoBannerQueue.size()) {
             String id = autoBannerQueue.get(autoBannerCursor++);
             MarkerController controller = idsOnMap.get(id);
-            if (controller == null || !controller.eligibleForAutoBanner()) continue;
+            if (controller == null || !controller.eligibleForAutoBanner()
+                || !bounds.contains(controller.position())) continue;
             controller.setAutoBannerExpanded(true);
             autoBannerBatch.add(id);
         }
@@ -460,6 +472,8 @@ public class MarkersUtils {
 
     public void disposeAppearances() {
         cancelAutoBannerRotation();
+        bannerHandler.removeCallbacks(closeAutoBannerBatch);
+        autoBannerBatch.clear();
         for (MarkerController controller : idsOnMap.values()) controller.disposeAppearance();
         panCells.clear();
         panCellById.clear();
